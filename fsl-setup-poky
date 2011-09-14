@@ -1,0 +1,271 @@
+#!/bin/sh
+#
+# FSL Build Enviroment Setup Script
+#
+# Copyright (C) 2011 Freescale Semiconductor
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+usage()
+{
+    echo "
+    Usage: source $POKY_DIR/fsl-setup-poky <-m machine> [-j jobs] [-t threads] [-l] [-h]
+
+    * <-m machine> is mandatory, [-j jobs], [-t threads] and [-l] are optional
+      supported boards: `ls ${META_FSL_PPC_LAYER_PATH}/conf/machine | grep -v "^e" | sed s/\.conf//g | xargs echo`
+    * [-j jobs]:    the number of jobs to have the make program itself spawn during the compilation stage.
+    * [-t threads]: the maximum number of BitBake tasks (or threads) that can be issued in parallel.
+    * [-l]:         lite mode. To help conserve disk space, deletes the building directory once the package is built.
+    * [-h]:         help
+
+"
+}
+
+exit_message ()
+{
+    echo "Run the following commands to start a build:"
+    local i=''
+    for i in `find ${META_FSL_PPC_LAYER_PATH}/ -name "*-image-*.bb"`;do
+	i=${i##*/};i=${i%.bb};
+        echo "    bitbake $i";
+    done
+    if [ -e "${META_FSL_PPC_LAYER_PATH}/../meta-fsl-ppc-private/" ]; then
+        for i in `find ${META_FSL_PPC_LAYER_PATH}/../meta-fsl-ppc-private/ -name "*-image-*.bb"`;do
+	    i=${i##*/};i=${i%.bb};
+            echo "    bitbake $i";
+        done
+	fi
+    
+    echo "To return to this build environment later please run:"
+    echo "    source $POKY_DIR/fsl-setup-poky -m ${BOARD}"
+}
+
+clean_up()
+{
+    unset POKY_DIR PROJECT_DIR META_FSL_PPC_LAYER_PATH
+    unset fsl_poky_setup_j fsl_poky_setup_t fsl_poky_setup_help fsl_poky_setup_error 
+    unset fsl_poky_setup_lite fsl_poky_setup_flag SKIP_CONFIG OLD_OPTIND VALID_BOARD
+    unset BOARD JOBS THREADS exit_message usage clean_up
+}
+
+if [ -z "$ZSH_NAME" ] && [ "x$0" = "x./fsl-setup-poky" ]; then
+   echo "Error: This script needs to be sourced. Please run as 'source ./fsl-setup-poky'"
+   return
+fi
+
+# POKY_DIR is the diretory that script fsl_poky_setup exists
+POKY_DIR=`readlink -f ${BASH_SOURCE[0]}`
+POKY_DIR=`dirname $POKY_DIR`
+
+# Check if meta-fsl-ppc layer exists
+if [ -e ${POKY_DIR}/meta-fsl-ppc ]; then
+    META_FSL_PPC_LAYER_PATH="${POKY_DIR}/meta-fsl-ppc"
+elif [ -e ${POKY_DIR}/../meta-fsl-ppc ]; then
+    META_FSL_PPC_LAYER_PATH="${POKY_DIR}/../meta-fsl-ppc"
+else
+    echo "Error: Build environment is missing meta-fsl-ppc layer in ${POKY_DIR} and ${POKY_DIR}/../";
+    clean_up && return 1
+fi
+
+# get command line options
+OLD_OPTIND=$OPTIND
+while getopts "m:j:t:lh" fsl_poky_setup_flag
+do
+    case $fsl_poky_setup_flag in
+        m) BOARD="$OPTARG";
+           ;;
+        j) fsl_poky_setup_j="$OPTARG";
+           ;;
+        t) fsl_poky_setup_t="$OPTARG";
+           ;;
+        l) fsl_poky_setup_lite=true;
+           ;;
+        h) fsl_poky_setup_help=true;
+           ;;
+        ?) fsl_poky_setup_error=true;
+           ;;
+    esac
+done
+OPTIND=$OLD_OPTIND
+
+# check the "-h" and other not supported options
+if test $fsl_poky_setup_error || test $fsl_poky_setup_help; then
+    usage && clean_up && return 1
+fi
+
+# Check board correction
+VALID_BOARD=`ls -al ${META_FSL_PPC_LAYER_PATH}/conf/machine | grep ${BOARD}.conf$ | wc -l`
+if [ "x$BOARD" = "x" ] || [ "$VALID_BOARD" = "0" ]; then
+    echo "Invalid board type!"
+    usage && clean_up
+    return 1
+else
+    echo "Configuring for ${BOARD} board type"
+fi
+
+# set default jobs and threads
+JOBS="2"
+THREADS="2"
+# Validate optional jobs and threads
+if [ -n "$fsl_poky_setup_j" ] && [[ "$fsl_poky_setup_j" =~ ^[0-9]+$ ]]; then
+    JOBS=$fsl_poky_setup_j
+fi
+if [ -n "$fsl_poky_setup_t" ] && [[ "$fsl_poky_setup_t" =~ ^[0-9]+$ ]]; then
+    THREADS=$fsl_poky_setup_t
+fi
+
+PROJECT_DIR=`pwd`/build_${BOARD}_release
+
+# Create project directory for specified target board
+SKIP_CONFIG=0
+if [ -e $PROJECT_DIR ]; then
+	SKIP_CONFIG="1"
+fi
+
+source $POKY_DIR/oe-init-build-env $PROJECT_DIR > /dev/null
+
+if [ "x${SKIP_CONFIG}" == "x1" ]; then
+	exit_message
+	return
+fi
+
+# setup all configurable items: mirrors, dl_dir, sscache dir, machine, etc
+# setup machine type
+echo >> conf/local.conf
+echo "# Machine Selection" >> conf/local.conf
+echo "MACHINE = ${BOARD}" >> conf/local.conf
+echo >> conf/local.conf
+
+# setup distro
+echo "# Distro selection" >> conf/local.conf
+echo "DISTRO = \"fsl\"" >> conf/local.conf
+echo >> conf/local.conf
+
+# setup parallel jobs and tasks
+echo "# Parallelism Options" >> conf/local.conf
+echo "BB_NUMBER_THREADS = \"$THREADS\"" >> conf/local.conf
+echo "PARALLEL_MAKE = \"-j $JOBS\"" >> conf/local.conf
+echo >> conf/local.conf
+
+# setup mirrors
+echo "# Packages source mirrors" >> conf/local.conf
+echo "INHERIT += \"own-mirrors\"" >> conf/local.conf
+echo "SOURCE_MIRROR_URL = \"http://linux.freescale.net/yocto/downloads/\"" >> conf/local.conf
+echo >> conf/local.conf
+
+# setup dl_dir
+echo "# Source download dir" >> conf/local.conf
+echo "DL_DIR = \"$PROJECT_DIR/../sources\"" >> conf/local.conf
+echo >> conf/local.conf
+
+# setup cache mirrors/dir
+echo "# The sstate-cache mirrors/directory" >> conf/local.conf
+echo "SSTATE_MIRRORS = \"file://.* http://linux.freescale.net/yocto/sstate-cache/\"" >> conf/local.conf
+echo "SSTATE_DIR = \"$PROJECT_DIR/../sstate-cache\"" >> conf/local.conf
+echo >> conf/local.conf
+
+# ignore proxy for internal freescale.net git repos
+echo "# Ignore proxy for freescale.net" >> conf/local.conf
+echo "GIT_PROXY_IGNORE = \"freescale.net\"" >> conf/local.conf
+echo >> conf/local.conf
+
+# set GIT_CORE_CONFIG so gitconfig file is generated
+echo "# we want to generate gitconfig file for our fetches" >> conf/local.conf
+echo "GIT_CORE_CONFIG = \"Yes\"" >> conf/local.conf
+echo >> conf/local.conf
+
+# proxy config
+echo "# proxy config" >> conf/local.conf
+echo "SOCKS5_USER = \"linuxlab_svc\"" >> conf/local.conf
+echo "SOCKS5_PASSWD = \"lnx1aB-Srv\"" >> conf/local.conf
+echo "GIT_PROXY_IGNORE = \"freescale.net\"" >> conf/local.conf
+echo "GIT_PROXY_COMMAND = \"$POKY_DIR/scripts/git-proxy\"" >> conf/local.conf
+echo "FETCHCOMMAND_cvs_prepend = \"socksify \"" >> conf/local.conf
+echo >> conf/local.conf
+
+echo "# use xz instead of gzip for sstate-cache" >> conf/local.conf
+echo "SSTATE_PKG_SUFFIX ?= \"txz\"" >> conf/local.conf
+echo "SSTATE_PKG_TARZIPPROG ?= \"xz\"" >> conf/local.conf
+echo >> conf/local.conf
+
+# append fsl layers
+sed "/  \"/d" conf/bblayers.conf > conf/bblayers.conf~
+mv conf/bblayers.conf~ conf/bblayers.conf
+
+# append meta-fsl-ppc bblayer into conf/bblayers.conf
+echo "  ${META_FSL_PPC_LAYER_PATH} \\" >> conf/bblayers.conf
+
+# append meta-fsl-ppc-private if it exists
+if [ -e ${POKY_DIR}/meta-fsl-ppc-private ]; then
+    echo "  ${POKY_DIR}/meta-fsl-ppc-private \\" >> conf/bblayers.conf
+elif [ -e ${POKY_DIR}/../meta-fsl-ppc-private ]; then
+    echo "  ${POKY_DIR}/../meta-fsl-ppc-private \\" >> conf/bblayers.conf
+fi
+
+# append meta-fsl-local-sdk if it exists
+if [ -e ${POKY_DIR}/meta-fsl-local-sdk ]; then
+    echo "  ${POKY_DIR}/meta-fsl-local-sdk \\" >> conf/bblayers.conf
+elif [ -e ${POKY_DIR}/../meta-fsl-local-sdk ]; then
+    echo "  ${POKY_DIR}/../meta-fsl-local-sdk \\" >> conf/bblayers.conf
+fi
+
+# append meta-oe/meta-oe if it exists
+if [ -e ${POKY_DIR}/meta-oe/meta-oe ]; then
+    echo "  ${POKY_DIR}/meta-oe/meta-oe \\" >> conf/bblayers.conf
+elif [ -e ${POKY_DIR}/../meta-oe/meta-oe ]; then
+    echo "  ${POKY_DIR}/../meta-oe/meta-oe \\" >> conf/bblayers.conf
+fi
+
+echo "  \"" >> conf/bblayers.conf
+
+# enable 32/64bit multilib if we are a p5020ds-64b , p5040ds-64b, p5020ds(-32b) or p5040ds(-32b)
+declare -a MULTILIB_MACHINES
+MULTILIB_MACHINES=(p5020ds p5040ds p5020ds-64b p5040ds-64b)
+for ((i=0;i<${#MULTILIB_MACHINES[@]};i++))
+do
+        if [ "$BOARD" == "${MULTILIB_MACHINES[$i]}" ]; then
+                echo "# multilib config for board " >> conf/local.conf
+                echo "require conf/multilib.conf" >> conf/local.conf
+             if  [[ $BOARD =~ "-64b" ]]; then
+                echo "MULTILIBS = \"multilib:lib32\"" >> conf/local.conf
+                echo "DEFAULTTUNE_virtclass-multilib-lib32 = \"ppce5500\"" >> conf/local.conf
+             else
+                echo "MULTILIBS = \"multilib:lib64\"" >> conf/local.conf
+                echo "DEFAULTTUNE_virtclass-multilib-lib64 = \"ppc64e5500\"" >> conf/local.conf
+             fi
+                echo >> conf/local.conf
+                # disable prelink (for multilib scenario) for now
+                sed -i s/image-mklibs.image-prelink/image-mklibs/g conf/local.conf
+        fi
+done
+
+# hidden option to enable lite mode for now
+if test $fsl_poky_setup_lite; then
+    echo "# delete sources after build" >> conf/local.conf
+    echo "INHERIT += \"rm_work\"" >> conf/local.conf
+    echo >> conf/local.conf
+fi
+
+# add uboot image types to hob
+echo "# add uboot image types to hob" >> conf/hob-pre.conf
+echo "INHERIT += \"image_types_uboot\"" >> conf/hob-pre.conf
+echo >> conf/hob-pre.conf
+
+# make an empty hob-post.conf to avoid message about missing file
+echo >> conf/hob-post.conf
+
+exit_message
+cd $PROJECT_DIR
+clean_up
