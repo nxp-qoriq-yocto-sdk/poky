@@ -2,7 +2,7 @@ DESCRIPTION = "Inittab for sysvinit"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=751419260aa954499f7abaabaa882bbe"
 
-PR = "r6"
+PR = "r7"
 
 SRC_URI = "file://COPYING \
            file://inittab"
@@ -54,6 +54,23 @@ EOF
         done
         echo "" >> ${D}${sysconfdir}/inittab
     fi
+}
+
+pkg_postinst_${PN} () {
+# run this on the target
+if [ "x$D" == "x" ]; then
+	tmp="${SERIAL_CONSOLES}"
+	for i in $tmp
+	do
+		j=`echo ${i} | sed s/^.*\;//g`
+		if [ -z "`dmesg | grep ${j}`" ]; then
+			sed -i /^.*${j}$/d /etc/inittab
+		fi
+	done
+	kill -HUP 1
+fi
+
+exit 1
 }
 
 # USE_VT and SERIAL_CONSOLE are generally defined by the MACHINE .conf.
