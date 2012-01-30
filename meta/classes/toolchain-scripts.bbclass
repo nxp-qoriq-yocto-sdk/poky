@@ -102,8 +102,8 @@ toolchain_create_sdk_env_script_for_installer () {
 }
 
 #we get the cached site config in the runtime
-TOOLCHAIN_CONFIGSITE_NOCACHE := "${@siteinfo_get_files(d, True)}"
-TOOLCHAIN_CONFIGSITE_SYSROOTCACHE := "${STAGING_DATADIR}/${TARGET_SYS}_config_site.d"
+TOOLCHAIN_CONFIGSITE_NOCACHE = "${@siteinfo_get_files(d, True)}"
+TOOLCHAIN_CONFIGSITE_SYSROOTCACHE = "${STAGING_DATADIR}/${TARGET_SYS}_config_site.d"
 TOOLCHAIN_NEED_CONFIGSITE_CACHE = "eglibc ncurses"
 
 #This function create a site config file
@@ -135,6 +135,7 @@ toolchain_create_sdk_version () {
 	echo 'Metadata Revision: ${METADATA_REVISION}' >> $versionfile
 	echo 'Timestamp: ${DATETIME}' >> $versionfile
 }
+toolchain_create_sdk_version[vardepsexclude] = "DATETIME"
 
 python __anonymous () {
     deps = bb.data.getVarFlag('do_configure', 'depends', d) or ""
