@@ -6,7 +6,7 @@ def get_qemu_target_list(d):
     import bb
     archs = bb.data.getVar('QEMU_TARGETS', d, True).split()
     targets = ""
-    for arch in ['mips64', 'mips64el', 'ppcemb']:
+    for arch in ['mips64', 'mips64el', 'ppcemb', 'ppc']:
         if arch in archs:
             targets += arch + "-softmmu,"
 	    archs.remove(arch)
