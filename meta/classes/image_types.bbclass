@@ -136,7 +136,7 @@ IMAGE_CMD_nfsroot () {
 	${IMAGE_CMD_tar}
 	mkdir -p ${DEPLOY_DIR_IMAGE}/nfsroot
 	cd ${DEPLOY_DIR_IMAGE}/nfsroot
-	env PSUEDO_UNLOAD=1 sudo tar xvf ${DEPLOY_DIR_IMAGE}/${IMAGE_NAME}.rootfs.tar
+	env PSUEDO_UNLOAD=1 sudo -A tar xvf ${DEPLOY_DIR_IMAGE}/${IMAGE_NAME}.rootfs.tar
 	rm -f ${DEPLOY_DIR_IMAGE}/${IMAGE_NAME}.rootfs.tar
 }
 
