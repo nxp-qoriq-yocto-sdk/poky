@@ -145,7 +145,7 @@ fi
 # setup machine type
 echo >> conf/local.conf
 echo "# Machine Selection" >> conf/local.conf
-echo "MACHINE = ${BOARD}" >> conf/local.conf
+echo "MACHINE = \"${BOARD}\"" >> conf/local.conf
 echo >> conf/local.conf
 
 # setup distro
