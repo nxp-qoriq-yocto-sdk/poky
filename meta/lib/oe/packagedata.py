@@ -27,6 +27,14 @@ def read_pkgdatafile(fn):
 
 def get_subpkgedata_fn(pkg, d):
     archs = bb.data.expand("${PACKAGE_ARCHS}", d).split(" ")
+    mlarchs = bb.data.getVar("MULTILIB_PACKAGE_ARCHS", d) or None
+
+    if mlarchs:
+        for mlarch in mlarchs.split(" "):
+            if "_" in mlarch:
+                prefix, split, new_arch = mlarch.partition("_")
+                archs.append(new_arch)
+
     archs.reverse()
     pkgdata = bb.data.expand('${TMPDIR}/pkgdata/', d)
     targetdir = bb.data.expand('${TARGET_VENDOR}-${TARGET_OS}/runtime/', d)
