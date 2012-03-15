@@ -16,6 +16,10 @@ python __anonymous () {
 do_install_append() {
     if test -n "${KERNEL_DEVICETREE}"; then
         for DTS_FILE in ${KERNEL_DEVICETREE}; do
+            if [ ! -f ${DTS_FILE} ]; then
+                echo "Warning: ${DTS_FILE} is not available!"
+                continue
+            fi
             DTS_BASE_NAME=`basename ${DTS_FILE} | awk -F "." '{print $1}'`
             DTB_NAME=`echo ${KERNEL_IMAGE_BASE_NAME} | sed "s/${MACHINE}/${DTS_BASE_NAME}/g"`
             DTB_SYMLINK_NAME=`echo ${KERNEL_IMAGE_SYMLINK_NAME} | sed "s/${MACHINE}/${DTS_BASE_NAME}/g"`
@@ -34,6 +38,10 @@ do_install_append() {
 do_deploy_append() {
     if test -n "${KERNEL_DEVICETREE}"; then
         for DTS_FILE in ${KERNEL_DEVICETREE}; do
+            if [ ! -f ${DTS_FILE} ]; then
+                echo "Warning: ${DTS_FILE} is not available!"
+                continue
+            fi
             DTS_BASE_NAME=`basename ${DTS_FILE} | awk -F "." '{print $1}'`
             DTB_NAME=`echo ${KERNEL_IMAGE_BASE_NAME} | sed "s/${MACHINE}/${DTS_BASE_NAME}/g"`
             DTB_SYMLINK_NAME=`echo ${KERNEL_IMAGE_SYMLINK_NAME} | sed "s/${MACHINE}/${DTS_BASE_NAME}/g"`
