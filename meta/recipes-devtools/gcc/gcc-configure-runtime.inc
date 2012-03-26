@@ -8,7 +8,7 @@ EXTRA_OECONF_PATHS = " \
     --with-sysroot=${STAGING_DIR_TARGET} \
     --with-build-sysroot=${STAGING_DIR_TARGET}"
 
-RUNTIMETARGET = "libssp libstdc++-v3"
+RUNTIMETARGET = "libssp libstdc++-v3 libgomp"
 #  ?
 # libiberty
 # libmudflap
