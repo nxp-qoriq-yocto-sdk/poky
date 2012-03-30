@@ -11,6 +11,8 @@ RDEPENDS_${PN} += "mpfr-nativesdk libmpc-nativesdk elfutils-nativesdk"
 SYSTEMHEADERS = "/usr/include"
 SYSTEMLIBS = "/lib/"
 SYSTEMLIBS1 = "/usr/lib/"
+SYSTEMLIBS_powerpc64 = "/lib64/"
+SYSTEMLIBS1_powerpc64 = "/usr/lib64/"
 
 EXTRA_OECONF += "--disable-libunwind-exceptions --disable-libssp \
 		--disable-libgomp --disable-libmudflap \
