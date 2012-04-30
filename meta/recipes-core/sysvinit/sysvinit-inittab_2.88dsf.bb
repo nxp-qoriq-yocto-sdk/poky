@@ -2,7 +2,7 @@ DESCRIPTION = "Inittab for sysvinit"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=751419260aa954499f7abaabaa882bbe"
 
-PR = "r8"
+PR = "r9"
 
 SRC_URI = "file://COPYING \
            file://inittab"
@@ -64,7 +64,7 @@ if [ "x$D" == "x" ]; then
 	for i in $tmp
 	do
 		j=`echo ${i} | sed s/^.*\;//g`
-		if [ -z "`dmesg | grep ${j}`" ]; then
+		if [ -z "`cat /proc/consoles | grep ${j}`" ]; then
 			sed -i /^.*${j}$/d /etc/inittab
 		fi
 	done
