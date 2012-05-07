@@ -7,7 +7,7 @@ SECTION = "base"
 LICENSE = "BSD"
 LIC_FILES_CHKSUM = "file://COPYING;md5=641ff1e4511f0a87044ad42f87cb1045"
 
-PR = "r4"
+PR = "r5"
 
 DEPENDS = "opensp-native sgml-common-native"
 RDEPENDS_${PN} = "sgml-common-native"
@@ -31,7 +31,7 @@ CONFIGUREOPTS := "${@d.getVar('CONFIGUREOPTS', True).replace('--datadir=${datadi
 # CONFIGUREOPTS has hard coded paths so we need to ignore it's vardeps
 # there are other bits in there too but they are picked up by other variable
 # dependencies so it all works out
-do_configure[vardepsexclude] += "CONNFIGUREOPTS"
+oe_runconf[vardepsexclude] += "CONFIGUREOPTS"
 
 CFLAGS =+ "-I${S}/include"
 
