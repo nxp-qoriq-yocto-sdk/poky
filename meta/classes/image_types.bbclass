@@ -133,6 +133,12 @@ IMAGE_CMD_ubi () {
 IMAGE_CMD_ubifs = "mkfs.ubifs -r ${IMAGE_ROOTFS} -o ${DEPLOY_DIR_IMAGE}/${IMAGE_NAME}.rootfs.ubifs ${MKUBIFS_ARGS}"
 
 IMAGE_CMD_nfsroot () {
+	# test for NOPASSWD sudo
+	if ! env PSUEDO_UNLOAC=1 sudo -A true; then
+		echo "ERROR: You need sudoers permission with NOPASSWD if using nfsroot in IMAGE_FSTYPES"
+		false
+	fi
+
 	${IMAGE_CMD_tar}
 	mkdir -p ${DEPLOY_DIR_IMAGE}/nfsroot
 	cd ${DEPLOY_DIR_IMAGE}/nfsroot
