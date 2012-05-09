@@ -15,6 +15,16 @@
 
 SCRIPT_DIR=`readlink -f $(dirname $0)`
 
+while getopts "f" host_prepare_flag
+do
+    case $host_prepare_flag in
+        h) force_update=true;
+           ;;
+        ?) force_update=false;
+           ;;
+    esac
+done
+
 # check host distribution
 if [ -r /etc/lsb-release ] && grep Ubuntu /etc/lsb-release >/dev/null 2>&1
 then
@@ -54,7 +64,7 @@ else
     echo "Error: Unsupported Distribution, Exit"
     exit 1
 fi
-export distro
+export distro force_update
 
 echo "Verifying sudo permission to execute $hostpkg command."
 user=`whoami` || true
