@@ -105,6 +105,14 @@ if test $fsl_poky_setup_error || test $fsl_poky_setup_help; then
     usage && clean_up && return 1
 fi
 
+# check if xz if available
+if [ -z "`which xz`" -o -z "`which chrpath`" -o -z "`which gcc`" -o -z "`which make`" ];then
+    echo "
+    ERROR: Please run script 'poky/scripts/host-prepare.sh' first.
+    "
+    return 1
+fi
+
 # Check board correction
 VALID_BOARD=`ls -al ${META_FSL_PPC_LAYER_PATH}/conf/machine | grep ${BOARD}.conf$ | wc -l`
 if [ "x$BOARD" = "x" ] || [ "$VALID_BOARD" = "0" ]; then
