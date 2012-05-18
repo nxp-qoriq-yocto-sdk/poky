@@ -28,6 +28,7 @@ usage()
     * [-j jobs]:    the number of jobs to have the make program itself spawn during the compilation stage.
     * [-t threads]: the maximum number of BitBake tasks (or threads) that can be issued in parallel.
     * [-l]:         lite mode. To help conserve disk space, deletes the building directory once the package is built.
+    * [-s extra path]: append an extra path to build_machine_release folder
     * [-h]:         help
 
 "
@@ -49,7 +50,12 @@ exit_message ()
 	fi
     
     echo "To return to this build environment later please run:"
-    echo "    source $POKY_DIR/fsl-setup-poky -m ${BOARD}"
+    echo -n "    source $POKY_DIR/fsl-setup-poky -m ${BOARD}"
+    if test $fsl_poky_setup_extra_path; then
+	echo " -s ${fsl_poky_setup_extra_path}"
+    else
+	echo ""
+    fi
 }
 
 clean_up()
@@ -79,9 +85,11 @@ else
     clean_up && return 1
 fi
 
+unset fsl_poky_setup_extra_path
+
 # get command line options
 OLD_OPTIND=$OPTIND
-while getopts "m:j:t:lh" fsl_poky_setup_flag
+while getopts "m:j:t:s:lh" fsl_poky_setup_flag
 do
     case $fsl_poky_setup_flag in
         m) BOARD="$OPTARG";
@@ -94,6 +102,8 @@ do
            ;;
         h) fsl_poky_setup_help=true;
            ;;
+	s) fsl_poky_setup_extra_path="$OPTARG";
+	   ;;
         ?) fsl_poky_setup_error=true;
            ;;
     esac
@@ -134,7 +144,7 @@ if [ -n "$fsl_poky_setup_t" ] && [[ "$fsl_poky_setup_t" =~ ^[0-9]+$ ]]; then
     THREADS=$fsl_poky_setup_t
 fi
 
-PROJECT_DIR=`pwd`/build_${BOARD}_release
+PROJECT_DIR=`pwd`/build_${BOARD}_release_${fsl_poky_setup_extra_path}
 
 # Create project directory for specified target board
 SKIP_CONFIG=0
