@@ -144,7 +144,11 @@ if [ -n "$fsl_poky_setup_t" ] && [[ "$fsl_poky_setup_t" =~ ^[0-9]+$ ]]; then
     THREADS=$fsl_poky_setup_t
 fi
 
-PROJECT_DIR=`pwd`/build_${BOARD}_release_${fsl_poky_setup_extra_path}
+    if test $fsl_poky_setup_extra_path; then
+	PROJECT_DIR=`pwd`/build_${BOARD}_release_${fsl_poky_setup_extra_path}
+    else
+	PROJECT_DIR=`pwd`/build_${BOARD}_release
+    fi
 
 # Create project directory for specified target board
 SKIP_CONFIG=0
