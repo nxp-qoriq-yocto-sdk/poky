@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://ncurses/base/version.c;beginline=1;endline=27;md5=cbc
 SECTION = "libs"
 DEPENDS = "ncurses-native"
 DEPENDS_virtclass-native = ""
-INC_PR = "r3"
+INC_PR = "r2"
 
 inherit autotools binconfig multilib_header
 
@@ -230,8 +230,6 @@ FILES_${PN}-terminfo = "\
 FILES_${PN}-terminfo-base = "\
   ${sysconfdir}/terminfo \
 "
-
-RDEPENDS_${PN}-dev += "pkgconfig"
 
 RSUGGESTS_${PN}-libtinfo = "${PN}-terminfo"
 RRECOMMENDS_${PN}-libtinfo = "${PN}-terminfo-base"
