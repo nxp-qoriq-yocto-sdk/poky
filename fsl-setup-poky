@@ -181,40 +181,14 @@ echo "BB_NUMBER_THREADS = \"$THREADS\"" >> conf/local.conf
 echo "PARALLEL_MAKE = \"-j $JOBS\"" >> conf/local.conf
 echo >> conf/local.conf
 
-# setup mirrors
-echo "# Packages source mirrors" >> conf/local.conf
-echo "INHERIT += \"own-mirrors\"" >> conf/local.conf
-echo "SOURCE_MIRROR_URL = \"http://linux.freescale.net/yocto/downloads/\"" >> conf/local.conf
-echo >> conf/local.conf
-
 # setup dl_dir
 echo "# Source download dir" >> conf/local.conf
 echo "DL_DIR = \"$PROJECT_DIR/../sources\"" >> conf/local.conf
 echo >> conf/local.conf
 
 # setup cache mirrors/dir
-echo "# The sstate-cache mirrors/directory" >> conf/local.conf
-echo "SSTATE_MIRRORS = \"file://.* http://linux.freescale.net/yocto/sstate-cache/\"" >> conf/local.conf
+echo "# The sstate-cache directory" >> conf/local.conf
 echo "SSTATE_DIR = \"$PROJECT_DIR/../sstate-cache\"" >> conf/local.conf
-echo >> conf/local.conf
-
-# ignore proxy for internal freescale.net git repos
-echo "# Ignore proxy for freescale.net" >> conf/local.conf
-echo "GIT_PROXY_IGNORE = \"freescale.net\"" >> conf/local.conf
-echo >> conf/local.conf
-
-# set GIT_CORE_CONFIG so gitconfig file is generated
-echo "# we want to generate gitconfig file for our fetches" >> conf/local.conf
-echo "GIT_CORE_CONFIG = \"Yes\"" >> conf/local.conf
-echo >> conf/local.conf
-
-# proxy config
-echo "# proxy config" >> conf/local.conf
-echo "SOCKS5_USER = \"linuxlab_svc\"" >> conf/local.conf
-echo "SOCKS5_PASSWD = \"lnx1aB-Srv\"" >> conf/local.conf
-echo "GIT_PROXY_IGNORE = \"freescale.net\"" >> conf/local.conf
-echo "GIT_PROXY_COMMAND = \"$POKY_DIR/scripts/git-proxy\"" >> conf/local.conf
-echo "FETCHCOMMAND_cvs_prepend = \"socksify \"" >> conf/local.conf
 echo >> conf/local.conf
 
 echo "# use xz instead of gzip for sstate-cache" >> conf/local.conf
