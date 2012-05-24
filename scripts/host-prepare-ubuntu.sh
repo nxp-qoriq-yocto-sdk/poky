@@ -16,7 +16,7 @@ PKGS="ubuntu-minimal ubuntu-standard patch vim-common xz-utils connect-proxy \
      unzip texi2html texinfo libsdl1.2-dev docbook-utils gawk \
      python-pysqlite2 diffstat make gcc build-essential \
      g++ desktop-file-utils chrpath libgl1-mesa-dev libglu1-mesa-dev \
-     autoconf automake groff libtool xterm libncurses5-dev"
+     autoconf automake groff libtool xterm libncurses5-dev cvs"
 if [ "`uname -m`" = "x86_64" ]; then
     PKGS="$PKGS ia32-libs lib32ncurses5"
 fi
