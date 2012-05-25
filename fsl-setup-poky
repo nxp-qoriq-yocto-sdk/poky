@@ -118,7 +118,7 @@ fi
 # check if xz if available
 if [ -z "`which xz`" -o -z "`which chrpath`" -o -z "`which gcc`" -o -z "`which make`" ];then
     echo "
-    ERROR: Please run script 'poky/scripts/host-prepare.sh' first.
+    ERROR: Please run './scripts/host-prepare.sh' to install the required host packages.
     "
     return 1
 fi
