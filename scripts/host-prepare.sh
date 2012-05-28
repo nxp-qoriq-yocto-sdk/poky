@@ -15,12 +15,20 @@
 
 SCRIPT_DIR=`readlink -f $(dirname $0)`
 
-while getopts "f" host_prepare_flag
+usage_message() {
+    echo "Usage: $0 [-h] [-f]
+    -h: display help
+    -f: force install all needed host pkgs, running non-interactively
+"
+}
+
+force_update=''
+while getopts "fh" host_prepare_flag
 do
     case $host_prepare_flag in
-        h) force_update=true;
+        f) force_update='true';
            ;;
-        ?) force_update=false;
+        ?) usage_message;exit 1;
            ;;
     esac
 done
