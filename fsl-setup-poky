@@ -29,6 +29,7 @@ usage()
     * [-t threads]: the maximum number of BitBake tasks (or threads) that can be issued in parallel.
     * [-l]:         lite mode. To help conserve disk space, deletes the building directory once the package is built.
     * [-s extra path]: append an extra path to build_machine_release folder
+    * [-p]: append proxy setting (For FSL Internal Use Only)
     * [-h]:         help
 
 "
@@ -63,7 +64,7 @@ clean_up()
     unset POKY_DIR PROJECT_DIR META_FSL_PPC_LAYER_PATH
     unset fsl_poky_setup_j fsl_poky_setup_t fsl_poky_setup_help fsl_poky_setup_error 
     unset fsl_poky_setup_lite fsl_poky_setup_flag SKIP_CONFIG OLD_OPTIND VALID_BOARD
-    unset BOARD JOBS THREADS exit_message usage clean_up
+    unset fsl_poky_setup_proxy BOARD JOBS THREADS exit_message usage clean_up
 }
 
 if [ -z "$ZSH_NAME" ] && [ "x$0" = "x./fsl-setup-poky" ]; then
@@ -86,10 +87,11 @@ else
 fi
 
 unset fsl_poky_setup_extra_path
+fsl_poky_setup_proxy=''
 
 # get command line options
 OLD_OPTIND=$OPTIND
-while getopts "m:j:t:s:lh" fsl_poky_setup_flag
+while getopts "m:j:t:s:lph" fsl_poky_setup_flag
 do
     case $fsl_poky_setup_flag in
         m) BOARD="$OPTARG";
@@ -98,13 +100,15 @@ do
            ;;
         t) fsl_poky_setup_t="$OPTARG";
            ;;
-        l) fsl_poky_setup_lite=true;
+        l) fsl_poky_setup_lite='true';
            ;;
-        h) fsl_poky_setup_help=true;
+        p) fsl_poky_setup_proxy='true';
+           ;;
+        h) fsl_poky_setup_help='true';
            ;;
 	s) fsl_poky_setup_extra_path="$OPTARG";
 	   ;;
-        ?) fsl_poky_setup_error=true;
+        ?) fsl_poky_setup_error='true';
            ;;
     esac
 done
@@ -120,6 +124,7 @@ if [ -z "`which xz`" -o -z "`which chrpath`" -o -z "`which gcc`" -o -z "`which m
     echo "
     ERROR: Please run './scripts/host-prepare.sh' to install the required host packages.
     "
+    clean_up
     return 1
 fi
 
@@ -159,7 +164,7 @@ fi
 source $POKY_DIR/oe-init-build-env $PROJECT_DIR > /dev/null
 
 if [ "x${SKIP_CONFIG}" == "x1" ]; then
-	exit_message
+	exit_message && clean_up
 	return
 fi
 
@@ -181,41 +186,47 @@ echo "BB_NUMBER_THREADS = \"$THREADS\"" >> conf/local.conf
 echo "PARALLEL_MAKE = \"-j $JOBS\"" >> conf/local.conf
 echo >> conf/local.conf
 
-# setup mirrors
-echo "# Packages source mirrors" >> conf/local.conf
-echo "INHERIT += \"own-mirrors\"" >> conf/local.conf
-echo "SOURCE_MIRROR_URL = \"http://linux.freescale.net/yocto/downloads/\"" >> conf/local.conf
-echo >> conf/local.conf
-
 # setup dl_dir
 echo "# Source download dir" >> conf/local.conf
 echo "DL_DIR = \"$PROJECT_DIR/../sources\"" >> conf/local.conf
 echo >> conf/local.conf
 
-# setup cache mirrors/dir
-echo "# The sstate-cache mirrors/directory" >> conf/local.conf
-echo "SSTATE_MIRRORS = \"file://.* http://linux.freescale.net/yocto/sstate-cache/\"" >> conf/local.conf
+# setup cache dir
+echo "# The sstate-cache dir" >> conf/local.conf
 echo "SSTATE_DIR = \"$PROJECT_DIR/../sstate-cache\"" >> conf/local.conf
 echo >> conf/local.conf
 
-# ignore proxy for internal freescale.net git repos
-echo "# Ignore proxy for freescale.net" >> conf/local.conf
-echo "GIT_PROXY_IGNORE = \"freescale.net\"" >> conf/local.conf
-echo >> conf/local.conf
-
-# set GIT_CORE_CONFIG so gitconfig file is generated
-echo "# we want to generate gitconfig file for our fetches" >> conf/local.conf
-echo "GIT_CORE_CONFIG = \"Yes\"" >> conf/local.conf
-echo >> conf/local.conf
-
-# proxy config
-echo "# proxy config" >> conf/local.conf
-echo "SOCKS5_USER = \"linuxlab_svc\"" >> conf/local.conf
-echo "SOCKS5_PASSWD = \"lnx1aB-Srv\"" >> conf/local.conf
-echo "GIT_PROXY_IGNORE = \"freescale.net\"" >> conf/local.conf
-echo "GIT_PROXY_COMMAND = \"$POKY_DIR/scripts/git-proxy\"" >> conf/local.conf
-echo "FETCHCOMMAND_cvs_prepend = \"socksify \"" >> conf/local.conf
-echo >> conf/local.conf
+if [ ! -z "$fsl_poky_setup_proxy" ];then
+    # setup mirrors
+    echo "# Packages source mirrors" >> conf/local.conf
+    echo "INHERIT += \"own-mirrors\"" >> conf/local.conf
+    echo "SOURCE_MIRROR_URL = \"http://linux.freescale.net/yocto/downloads/\"" >> conf/local.conf
+    echo >> conf/local.conf
+    
+    # setup cache mirrors
+    echo "# The sstate-cache mirrors" >> conf/local.conf
+    echo "SSTATE_MIRRORS = \"file://.* http://linux.freescale.net/yocto/sstate-cache/\"" >> conf/local.conf
+    echo >> conf/local.conf
+    
+    # ignore proxy for internal freescale.net git repos
+    echo "# Ignore proxy for freescale.net" >> conf/local.conf
+    echo "GIT_PROXY_IGNORE = \"freescale.net\"" >> conf/local.conf
+    echo >> conf/local.conf
+    
+    # set GIT_CORE_CONFIG so gitconfig file is generated
+    echo "# we want to generate gitconfig file for our fetches" >> conf/local.conf
+    echo "GIT_CORE_CONFIG = \"Yes\"" >> conf/local.conf
+    echo >> conf/local.conf
+    
+    # proxy config
+    echo "# proxy config" >> conf/local.conf
+    echo "SOCKS5_USER = \"linuxlab_svc\"" >> conf/local.conf
+    echo "SOCKS5_PASSWD = \"lnx1aB-Srv\"" >> conf/local.conf
+    echo "GIT_PROXY_IGNORE = \"freescale.net\"" >> conf/local.conf
+    echo "GIT_PROXY_COMMAND = \"$POKY_DIR/scripts/git-proxy\"" >> conf/local.conf
+    echo "FETCHCOMMAND_cvs_prepend = \"socksify \"" >> conf/local.conf
+    echo >> conf/local.conf
+fi
 
 echo "# use xz instead of gzip for sstate-cache" >> conf/local.conf
 echo "SSTATE_PKG_SUFFIX ?= \"txz\"" >> conf/local.conf
