@@ -134,14 +134,14 @@ IMAGE_CMD_ubifs = "mkfs.ubifs -r ${IMAGE_ROOTFS} -o ${DEPLOY_DIR_IMAGE}/${IMAGE_
 
 IMAGE_CMD_nfsroot () {
 	# test for NOPASSWD sudo
-	if ! env PSUEDO_UNLOAC=1 sudo -A true; then
+	if ! env PSUEDO_UNLOAD=1 sudo -A true; then
 		echo "ERROR: You need sudoers permission with NOPASSWD if using nfsroot in IMAGE_FSTYPES"
 		false
 	fi
 
 	${IMAGE_CMD_tar}
-	mkdir -p ${DEPLOY_DIR_IMAGE}/nfsroot
-	cd ${DEPLOY_DIR_IMAGE}/nfsroot
+	mkdir -p ${DEPLOY_DIR_IMAGE}/${IMAGE_NAME}.rootfs.nfsroot
+	cd ${DEPLOY_DIR_IMAGE}/${IMAGE_NAME}.rootfs.nfsroot
 	env PSUEDO_UNLOAD=1 sudo -A tar xvf ${DEPLOY_DIR_IMAGE}/${IMAGE_NAME}.rootfs.tar
 	rm -f ${DEPLOY_DIR_IMAGE}/${IMAGE_NAME}.rootfs.tar
 }
