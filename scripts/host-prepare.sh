@@ -102,7 +102,7 @@ exit 1
 fi
 
 case "$distro" in
-    'Ubuntu')
+    'Ubuntu' | ' Mint')
         script="$SCRIPT_DIR/host-prepare-ubuntu.sh";
         ;;
     'Redhat' | 'CentOS' | 'Fedora')
