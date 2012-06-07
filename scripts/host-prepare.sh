@@ -113,7 +113,11 @@ case "$distro" in
         ;;
 esac
 
-/bin/sh $script
+/bin/sh -e $script
+rc=$?
+if [ "$rc" != "0" ];then
+   exit 1
+fi
 
 # Make sure python is 2.x (2.6 or greater)
 PYTHON_PATH="/opt/python2.6"
