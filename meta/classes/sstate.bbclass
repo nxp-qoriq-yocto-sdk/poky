@@ -45,6 +45,12 @@ EXTRA_STAGING_FIXMES ?= ""
 sstate_create_package[dirs] = "${SSTATE_BUILDDIR}"
 sstate_unpack_package[dirs] = "${SSTATE_INSTDIR}"
 
+SSTATE_PKG_SUFFIX ?= "tgz"
+SSTATE_PKG_TARZIPPROG ?= "gzip"
+# the tool used above for sstate-cache will always need to be used from the host
+# so we can ASSUME_PROVIDED it
+ASSUME_PROVIDED += "${SSTATE_PKG_TARZIPPROG}-native"
+
 python () {
     if bb.data.inherits_class('native', d):
         d.setVar('SSTATE_PKGARCH', d.getVar('BUILD_ARCH'))
@@ -229,8 +235,8 @@ def sstate_installpkg(ss, d):
         oe.path.remove(dir)
 
     sstateinst = d.expand("${WORKDIR}/sstate-install-%s/" % ss['task'])
-    sstatefetch = d.getVar('SSTATE_PKGNAME', True) + '_' + ss['task'] + ".tgz"
-    sstatepkg = d.getVar('SSTATE_PKG', True) + '_' + ss['task'] + ".tgz"
+    sstatefetch = d.expand("${SSTATE_PKGNAME}" + '_' + ss['task'] + ".${SSTATE_PKG_SUFFIX}")
+    sstatepkg = d.expand("${SSTATE_PKG}" + '_' + ss['task'] + ".${SSTATE_PKG_SUFFIX}")
 
     if not os.path.exists(sstatepkg):
         pstaging_fetch(sstatefetch, sstatepkg, d)
@@ -300,7 +306,7 @@ def sstate_installpkg(ss, d):
 def sstate_clean_cachefile(ss, d):
     import oe.path
 
-    sstatepkgfile = d.getVar('SSTATE_PATHSPEC', True) + "*_" + ss['task'] + ".tgz*"
+    sstatepkgfile = d.expand("${SSTATE_PATHSPEC}" + "*_" + ss['task'] + ".${SSTATE_PKG_SUFFIX}*")
     bb.note("Removing %s" % sstatepkgfile)
     oe.path.remove(sstatepkgfile)
 
@@ -482,7 +488,7 @@ def sstate_package(ss, d):
     tmpdir = d.getVar('TMPDIR', True)
 
     sstatebuild = d.expand("${WORKDIR}/sstate-build-%s/" % ss['task'])
-    sstatepkg = d.getVar('SSTATE_PKG', True) + '_'+ ss['task'] + ".tgz"
+    sstatepkg = d.expand("${SSTATE_PKG}" + '_' + ss['task'] + ".${SSTATE_PKG_SUFFIX}")
     bb.utils.remove(sstatebuild, recurse=True)
     bb.utils.mkdirhier(sstatebuild)
     bb.utils.mkdirhier(os.path.dirname(sstatepkg))
@@ -595,13 +601,13 @@ sstate_create_package () {
 	# Need to handle empty directories
 	if [ "$(ls -A)" ]; then
 		set +e
-		tar -czf $TFILE *
+		tar --use-compress-program=${SSTATE_PKG_TARZIPPROG} -cf ${TFILE} *
 		if [ $? -ne 0 ] && [ $? -ne 1 ]; then
 			exit 1
 		fi
 		set -e
 	else
-		tar -cz --file=$TFILE --files-from=/dev/null
+		tar --use-compress-program=${SSTATE_PKG_TARZIPPROG} -c --file=${TFILE} --files-from=/dev/null
 	fi
 	chmod 0664 $TFILE 
 	mv -f $TFILE ${SSTATE_PKG}
@@ -616,7 +622,7 @@ sstate_create_package () {
 sstate_unpack_package () {
 	mkdir -p ${SSTATE_INSTDIR}
 	cd ${SSTATE_INSTDIR}
-	tar -xmvzf ${SSTATE_PKG}
+	tar --use-compress-program=${SSTATE_PKG_TARZIPPROG} -xmvf ${SSTATE_PKG}
 }
 
 BB_HASHCHECK_FUNCTION = "sstate_checkhashes"
@@ -645,8 +651,7 @@ def sstate_checkhashes(sq_fn, sq_task, sq_hash, sq_hashfn, d):
 
         spec, extrapath, tname = getpathcomponents(task, d)
 
-        sstatefile = d.expand("${SSTATE_DIR}/" + extrapath + generate_sstatefn(spec, sq_hash[task], d) + "_" + tname + ".tgz.siginfo")
-
+        sstatefile = d.expand("${SSTATE_DIR}/" + extrapath + generate_sstatefn(spec, sq_hash[task], d) + "_" + tname + ".${SSTATE_PKG_SUFFIX}" + ".siginfo")
         if os.path.exists(sstatefile):
             bb.debug(2, "SState: Found valid sstate file %s" % sstatefile)
             ret.append(task)
@@ -678,8 +683,7 @@ def sstate_checkhashes(sq_fn, sq_task, sq_hash, sq_hashfn, d):
 
             spec, extrapath, tname = getpathcomponents(task, d)
 
-            sstatefile = d.expand(extrapath + generate_sstatefn(spec, sq_hash[task], d) + "_" + tname + ".tgz.siginfo")
-
+            sstatefile = d.expand(extrapath + generate_sstatefn(spec, sq_hash[task], d) + "_" + tname + ".${SSTATE_PKG_SUFFIX}")
             srcuri = "file://" + sstatefile
             localdata.setVar('SRC_URI', srcuri)
             bb.debug(2, "SState: Attempting to fetch %s" % srcuri)
