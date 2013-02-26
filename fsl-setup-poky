@@ -1,0 +1,435 @@
+#!/bin/sh
+#
+# FSL Build Enviroment Setup Script
+#
+# Copyright (C) 2011-2013 Freescale Semiconductor
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+usage()
+{
+    echo -e "\nUsage: source ${BASH_SOURCE[0]} <-m machine>
+    Optional parameters: [-j jobs] [-t tasks] [-s path] [-p] [-l] [-h]"
+    if [ -e "$META_FSL_NETWORKING_LAYER_PATH/../meta-fsl-ppc" ]; then
+        echo -n "    Supported ppc machines: `ls ${META_FSL_NETWORKING_LAYER_PATH}/../meta-fsl-ppc/conf/machine \
+        | grep -v "^e" | sed s/\.conf//g | xargs echo`"
+    fi
+    if [ -e "$META_FSL_ARM_LAYER_PATH" ]; then
+        echo -e -n "\n    Supported arm machines: `ls ${META_FSL_ARM_LAYER_PATH}/conf/machine \
+        | grep -v "^include" | sed s/\.conf//g | xargs echo`"
+    fi
+echo "
+    * [-j jobs]:  number of jobs for make to spawn during the compilation stage.
+    * [-t tasks]: number of BitBake tasks that can be issued in parallel.
+    * [-d path]:  non-default DL_DIR path (download dir)
+    * [-c path]:  non-default SSTATE_DIR path (shard state Cache dir)
+    * [-b path]:  non-default build dir location
+    * [-s path]:  append an extra path to build_machine_release folder
+    * [-l]:       lite mode. To help conserve disk space, deletes the building 
+                  directory once the package is built.
+    * [-p]:       append cache and source mirrors (For FSL Internal Use Only)
+    * [-h]:       help
+"
+}
+
+exit_message ()
+{
+    echo "Run the following commands to start a build:"
+    local i=''
+
+    if [[ "${BOARD}" =~ "imx" ]]; then
+        if [ -e "${META_FSL_MULTIMEDIA_LAYER_PATH}" ]; then
+            for i in `find ${META_FSL_MULTIMEDIA_LAYER_PATH}/ -name "fsl-image-*.bb"`;do
+            i=${i##*/};i=${i%.bb};
+                echo "    bitbake $i";
+            done
+        fi
+    else
+        if [ -e "${META_FSL_NETWORKING_LAYER_PATH}" ]; then
+            for i in `find ${META_FSL_NETWORKING_LAYER_PATH}/ -name "fsl-image-*.bb"`;do
+            i=${i##*/};i=${i%.bb};
+                echo "    bitbake $i";
+            done
+        fi
+        if [ -e "${META_FSL_NETWORKING_LAYER_PATH}/../meta-fsl-ppc/" ]; then
+            for i in `find ${META_FSL_NETWORKING_LAYER_PATH}/../meta-fsl-ppc/ -name "fsl-image-*.bb"`;do
+            i=${i##*/};i=${i%.bb};
+                echo "    bitbake $i";
+            done
+        fi
+    fi
+    
+    echo "To return to this build environment later please run:"
+    echo "    source $POKY_DIR/build_${BOARD}_release/SOURCE_THIS"
+}
+
+clean_up()
+{
+    unset POKY_DIR PROJECT_DIR META_FSL_NETWORKING_LAYER_PATH META_FSL_MULTIMEDIA_LAYER_PATH META_FSL_ARM_LAYER_PATH
+    unset fsl_poky_setup_j fsl_poky_setup_t fsl_poky_setup_help fsl_poky_setup_error 
+    unset fsl_poky_setup_lite fsl_poky_setup_flag SKIP_CONFIG OPTIND OLD_OPTIND VALID_BOARD
+    unset fsl_poky_setup_proxy BOARD JOBS THREADS exit_message usage clean_up
+    unset fsl_poky_setup_extra_path fsl_poky_setup_build_path fsl_poky_setup_dl_path
+    unset fsl_poky_setup_sstate_path
+    unset ARM_BOARD PPC_BOARD MULTILIB_MACHINES ARCH
+    unset EULA
+}
+
+# POKY_DIR is the diretory that script fsl_poky_setup exists
+POKY_DIR=`readlink -f ${BASH_SOURCE[0]}`
+POKY_DIR=`dirname $POKY_DIR`
+
+# Check if meta-fsl-networking layer exists
+if [ -e ${POKY_DIR}/meta-fsl-networking ]; then
+    META_FSL_NETWORKING_LAYER_PATH="${POKY_DIR}/meta-fsl-networking"
+elif [ -e ${POKY_DIR}/../meta-fsl-networking ]; then
+    META_FSL_NETWORKING_LAYER_PATH="${POKY_DIR}/../meta-fsl-networking"
+fi
+
+# Check if meta-fsl-multimedia layer exists
+if [ -e ${POKY_DIR}/meta-fsl-multimedia ]; then
+    META_FSL_MULTIMEDIA_LAYER_PATH="${POKY_DIR}/meta-fsl-multimedia"
+elif [ -e ${POKY_DIR}/../meta-fsl-multimedia ]; then
+    META_FSL_MULTIMEDIA_LAYER_PATH="${POKY_DIR}/../meta-fsl-multimedia"
+fi
+
+# Check if meta-fsl-arm layer exists
+if [ -e ${POKY_DIR}/meta-fsl-arm ]; then
+    META_FSL_ARM_LAYER_PATH="${POKY_DIR}/meta-fsl-arm"
+elif [ -e ${POKY_DIR}/../meta-fsl-arm ]; then
+    META_FSL_ARM_LAYER_PATH="${POKY_DIR}/../meta-fsl-arm"
+fi
+
+if [ "$META_FSL_NETWORKING_LAYER_PATH" == "" ] && [ "$META_FSL_MULTIMEDIA_LAYER_PATH" == "" ]; then
+    echo "WARNING: both meta-fsl-networking layer and meta-fsl-multimedia layer are missing in ${POKY_DIR} and ${POKY_DIR}/../"
+fi
+
+if [ -z "$ZSH_NAME" ] && [ "$0" = "${BASH_SOURCE[0]}" ]; then
+    echo "Error: This script needs to be sourced."
+    usage && exit 1
+fi
+
+# get command line options
+OLD_OPTIND=$OPTIND
+while getopts "m:j:t:s:b:d:c:lph" fsl_poky_setup_flag
+do
+    case $fsl_poky_setup_flag in
+        m) BOARD="$OPTARG";
+           ;;
+        j) fsl_poky_setup_j="$OPTARG";
+           ;;
+        t) fsl_poky_setup_t="$OPTARG";
+           ;;
+        l) fsl_poky_setup_lite='true';
+           ;;
+        p) fsl_poky_setup_proxy='true';
+           ;;
+        h) fsl_poky_setup_help='true';
+           ;;
+        s) fsl_poky_setup_extra_path="$OPTARG";
+           ;;
+        b) fsl_poky_setup_build_path="$OPTARG";
+           ;;
+        d) fsl_poky_setup_dl_path="$OPTARG";
+           ;;
+        c) fsl_poky_setup_sstate_path="$OPTARG";
+           ;;
+        ?) fsl_poky_setup_error='true';
+           ;;
+    esac
+done
+OPTIND=$OLD_OPTIND
+
+# check the "-h" and other not supported options
+if test $fsl_poky_setup_error || test $fsl_poky_setup_help; then
+    usage && clean_up && return 1
+fi
+
+# check if xz if available
+if [ -z "`which xz`" -o -z "`which chrpath`" -o -z "`which gcc`" -o -z "`which make`" ];then
+    echo "
+    ERROR: Please run script '${POKY_DIR}/scripts/host-prepare.sh' first.
+    "
+    clean_up
+    return 1
+fi
+
+# Check board correction
+if [ -e "$META_FSL_NETWORKING_LAYER_PATH" ]; then
+    NETWORKING_BOARD=`ls ${META_FSL_NETWORKING_LAYER_PATH}/../meta-fsl-ppc/conf/machine` 
+fi
+if [ -e "$META_FSL_ARM_LAYER_PATH" ]; then
+    ARM_BOARD=`ls ${META_FSL_ARM_LAYER_PATH}/conf/machine`
+fi
+VALID_BOARD=`echo -e "$NETWORKING_BOARD\n$ARM_BOARD" | grep -w ${BOARD}.conf$ | wc -l`
+if [ "x$BOARD" = "x" ] || [ "$VALID_BOARD" = "0" ]; then
+    echo "Invalid board type!"
+    usage && clean_up
+    return 1
+else
+    echo "Configuring for ${BOARD} board type"
+fi
+
+# set default jobs and threads
+JOBS="2"
+THREADS="2"
+# Validate optional jobs and threads
+if [ -n "$fsl_poky_setup_j" ] && [[ "$fsl_poky_setup_j" =~ ^[0-9]+$ ]]; then
+    JOBS=$fsl_poky_setup_j
+fi
+if [ -n "$fsl_poky_setup_t" ] && [[ "$fsl_poky_setup_t" =~ ^[0-9]+$ ]]; then
+    THREADS=$fsl_poky_setup_t
+fi
+
+if test $fsl_poky_setup_extra_path; then
+	PROJECT_DIR=`pwd`/build_${BOARD}_release_${fsl_poky_setup_extra_path}
+elif test $fsl_poky_setup_build_path; then
+	PROJECT_DIR=${fsl_poky_setup_build_path}
+else
+	PROJECT_DIR=`pwd`/build_${BOARD}_release
+fi
+
+# Create project directory for specified target board
+SKIP_CONFIG=0
+if [ -e "$PROJECT_DIR" ]; then
+	SKIP_CONFIG="1"
+fi
+
+echo "Creating an yocto build output at $PROJECT_DIR"
+source $POKY_DIR/oe-init-build-env $PROJECT_DIR > /dev/null
+
+if [ "x${SKIP_CONFIG}" == "x1" ]; then
+	exit_message && clean_up
+	return
+fi
+
+# setup all configurable items: mirrors, dl_dir, sscache dir, machine, etc
+# setup machine type
+echo >> conf/local.conf
+echo "# Machine Selection" >> conf/local.conf
+echo "MACHINE = \"${BOARD}\"" >> conf/local.conf
+echo >> conf/local.conf
+
+# setup distro
+echo "# Distro selection" >> conf/local.conf
+if [[ "${BOARD}" =~ "imx" ]]; then
+    echo "DISTRO = \"poky\"" >> conf/local.conf
+else
+    echo "DISTRO = \"fsl-networking\"" >> conf/local.conf
+fi
+echo >> conf/local.conf
+
+# setup parallel jobs and tasks
+echo "# Parallelism Options" >> conf/local.conf
+echo "BB_NUMBER_THREADS = \"$THREADS\"" >> conf/local.conf
+echo "PARALLEL_MAKE = \"-j $JOBS\"" >> conf/local.conf
+echo >> conf/local.conf
+
+# setup dl_dir
+echo "# Source download dir" >> conf/local.conf
+if test $fsl_poky_setup_dl_path; then
+	echo "DL_DIR = \"$fsl_poky_setup_dl_path\"" >> conf/local.conf
+else
+	echo "DL_DIR = \"$PROJECT_DIR/../sources\"" >> conf/local.conf
+fi
+echo >> conf/local.conf
+
+# setup cache dir
+echo "# The sstate-cache dir" >> conf/local.conf
+if test $fsl_poky_setup_sstate_path; then
+        echo "SSTATE_DIR = \"$fsl_poky_setup_sstate_path\"" >> conf/local.conf
+elif test $fsl_poky_setup_build_path; then
+        echo "SSTATE_DIR = \"$PROJECT_DIR/sstate-cache\"" >> conf/local.conf
+else
+        echo "SSTATE_DIR = \"$PROJECT_DIR/../sstate-cache\"" >> conf/local.conf
+fi
+echo >> conf/local.conf
+
+if [ ! -z "$fsl_poky_setup_proxy" ];then
+    # setup mirrors
+    echo "# Packages source mirrors" >> conf/local.conf
+    echo "INHERIT += \"own-mirrors\"" >> conf/local.conf
+    echo "SOURCE_MIRROR_URL = \"http://nas101.am.freescale.net/yocto/downloads/\"" >> conf/local.conf
+    echo >> conf/local.conf
+    
+    # setup cache mirrors
+    echo "# The sstate-cache mirrors" >> conf/local.conf
+    echo "SSTATE_MIRRORS = \"file://(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/\\1/\\2 \\n\"" >> conf/local.conf
+    echo "SSTATE_MIRRORS += \"file://.*/(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/native/\\1/\\2 \\n\"" >> conf/local.conf
+    echo >> conf/local.conf
+fi
+
+if [[ "${BOARD}" =~ "imx" ]]; then
+    # append meta-fsl-arm bblayer into conf/bblayers.conf
+    if [ -e "${META_FSL_ARM_LAYER_PATH}" ]; then
+        awk '/  \"/ && !x {print "'"  ${META_FSL_ARM_LAYER_PATH}"' \\"; x=1} 1' conf/bblayers.conf > conf/bblayers.conf~
+        mv conf/bblayers.conf~ conf/bblayers.conf
+    fi
+else
+    # append ppc layer if it exists
+    for layer in meta-fsl-ppc meta-fsl-ppc-toolchain meta-virtualization;do
+        if [ -e ${POKY_DIR}/${layer} ]; then
+            awk '/  \"/ && !x {print "'"  ${POKY_DIR}/${layer}"' \\"; x=1} 1' conf/bblayers.conf > conf/bblayers.conf~
+            mv conf/bblayers.conf~ conf/bblayers.conf
+        elif [ -e ${POKY_DIR}/../${layer} ]; then
+            awk '/  \"/ && !x {print "'"  ${POKY_DIR}/../${layer}"' \\"; x=1} 1' conf/bblayers.conf > conf/bblayers.conf~
+            mv conf/bblayers.conf~ conf/bblayers.conf
+        fi
+    done
+    # append meta-fsl-networking bblayer into conf/bblayers.conf
+    if [ -e "${META_FSL_NETWORKING_LAYER_PATH}" ]; then
+        awk '/  \"/ && !x {print "'"  ${META_FSL_NETWORKING_LAYER_PATH}"' \\"; x=1} 1' conf/bblayers.conf > conf/bblayers.conf~
+        mv conf/bblayers.conf~ conf/bblayers.conf
+    fi
+fi
+
+# append meta-fsl-local-sdk if it exists
+if [ -e ${POKY_DIR}/meta-fsl-local-sdk ]; then
+    awk '/  \"/ && !x {print "'"  ${POKY_DIR}/meta-fsl-local-sdk"' \\"; x=1} 1' conf/bblayers.conf > conf/bblayers.conf~
+    mv conf/bblayers.conf~ conf/bblayers.conf
+elif [ -e ${POKY_DIR}/../meta-fsl-local-sdk ]; then
+    awk '/  \"/ && !x {print "'"  ${POKY_DIR}/../meta-fsl-local-sdk"' \\"; x=1} 1' conf/bblayers.conf > conf/bblayers.conf~
+    mv conf/bblayers.conf~ conf/bblayers.conf
+fi
+
+# append meta-oe/meta-oe if it exists
+if [ -e ${POKY_DIR}/meta-oe/meta-oe ]; then
+    awk '/  \"/ && !x {print "'"  ${POKY_DIR}/meta-oe/meta-oe"' \\"; x=1} 1' conf/bblayers.conf > conf/bblayers.conf~
+    mv conf/bblayers.conf~ conf/bblayers.conf
+elif [ -e ${POKY_DIR}/../meta-oe/meta-oe ]; then
+    awk '/  \"/ && !x {print "'"  ${POKY_DIR}/../meta-oe/meta-oe"' \\"; x=1} 1' conf/bblayers.conf > conf/bblayers.conf~
+    mv conf/bblayers.conf~ conf/bblayers.conf
+fi
+
+if [[ "${BOARD}" =~ "imx" ]]; then
+    awk '/  \"/ && !x {print "'"  ${META_FSL_MULTIMEDIA_LAYER_PATH}"' \\"; x=1} 1' conf/bblayers.conf > conf/bblayers.conf~
+    mv conf/bblayers.conf~ conf/bblayers.conf
+else
+# append meta-oe/meta-networking if it exists
+if [ -e ${POKY_DIR}/meta-oe/meta-networking ]; then
+    awk '/  \"/ && !x {print "'"  ${POKY_DIR}/meta-oe/meta-networking"' \\"; x=1} 1' conf/bblayers.conf > conf/bblayers.conf~
+    mv conf/bblayers.conf~ conf/bblayers.conf
+elif [ -e ${POKY_DIR}/../meta-oe/meta-networking ]; then
+    awk '/  \"/ && !x {print "'"  ${POKY_DIR}/../meta-oe/meta-networking"' \\"; x=1} 1' conf/bblayers.conf > conf/bblayers.conf~
+    mv conf/bblayers.conf~ conf/bblayers.conf
+fi
+fi
+
+# set meta-oe layer with lowest priority
+if [ -e ${POKY_DIR}/meta-oe/meta-oe ] || [ -e ${POKY_DIR}/../meta-oe/meta-oe ]; then
+    echo "BBFILE_PRIORITY_openembedded-layer = \"1\"" >> conf/local.conf
+    echo >> conf/local.conf
+fi
+
+if [[ "${BOARD}" =~ "imx" ]]; then
+    # Handle EULA setting
+    if [ -z "$EULA" ] && ! grep -q '^ACCEPT_FSL_EULA\s*=' conf/local.conf; then
+        EULA='ask'
+    fi
+
+    if [ "$EULA" = "ask" ]; then
+        cat <<EOF
+
+Some SoC depends on libraries and packages that are covered by
+Freescale EULA. To have the right to use those binaries in your images
+you need to read and accept the EULA that will be displayed.
+
+EOF
+
+        sleep 4
+
+        more -d ${META_FSL_ARM_LAYER_PATH}/EULA
+        echo
+        while [ "$EULA" = "ask" ]; do
+            echo -n "Do you accept the EULA you just read? (y/n) "
+            read REPLY
+            case "$REPLY" in
+                y|Y)
+                echo "EULA has been accepted."
+                EULA="1"
+                ;;
+                n|N)
+                echo "EULA has not been accepted."
+                EULA="0"
+                ;;
+            esac
+        done
+    fi
+    if grep -q '^ACCEPT_FSL_EULA\s*=' conf/local.conf; then
+        sed -i "s/^#*ACCEPT_FSL_EULA\s*=.*/ACCEPT_FSL_EULA = \"$EULA\"/g" conf/local.conf
+    else
+        echo "ACCEPT_FSL_EULA = \"$EULA\"" >> conf/local.conf
+    fi
+fi
+
+# enable 32/64bit multilib if we are a p5020ds-64b , p5040ds-64b, p5020ds(-32b) or p5040ds(-32b)
+declare -a MULTILIB_MACHINES
+MULTILIB_MACHINES=(p5020ds p5040ds p5020ds-64b p5040ds-64b t4240qds t4240qds-64b b4860qds b4860qds-64b b4420qds b4420qds-64b t4160qds t4160qds-64b)
+for ((i=0;i<${#MULTILIB_MACHINES[@]};i++))
+do
+        if [ "$BOARD" == "${MULTILIB_MACHINES[$i]}" ]; then
+		if [[ $BOARD =~ "t4240qds" ]] || [[ $BOARD =~ "b4860qds" ]]; then
+			ARCH="e6500"
+		elif [[ $BOARD =~ "b4420qds" ]] || [[ $BOARD =~ "t4160qds" ]]; then
+			ARCH="e6500"
+		else
+			ARCH="e5500"
+		fi
+                echo "# multilib config for board " >> conf/local.conf
+                echo "require conf/multilib.conf" >> conf/local.conf
+		if  [[ $BOARD =~ "-64b" ]]; then
+                	echo "MULTILIBS = \"multilib:lib32\"" >> conf/local.conf
+	                echo "DEFAULTTUNE_virtclass-multilib-lib32 = \"ppc${ARCH}\"" >> conf/local.conf
+             	else
+                	echo "MULTILIBS = \"multilib:lib64\"" >> conf/local.conf
+	                echo "DEFAULTTUNE_virtclass-multilib-lib64 = \"ppc64${ARCH}\"" >> conf/local.conf
+        	fi
+                echo >> conf/local.conf
+                # disable prelink (for multilib scenario) for now
+                sed -i s/image-mklibs.image-prelink/image-mklibs/g conf/local.conf
+        fi
+done
+
+# hidden option to enable lite mode for now
+if test $fsl_poky_setup_lite; then
+    echo "# delete sources after build" >> conf/local.conf
+    echo "INHERIT += \"rm_work\"" >> conf/local.conf
+    echo >> conf/local.conf
+fi
+
+echo "# use xz instead of gzip for sstate-cache" >> conf/local.conf
+echo "SSTATE_PKG_SUFFIX = \"txz\"" >> conf/local.conf
+echo "SSTATE_PKG_TARZIPPROG = \"xz\"" >> conf/local.conf
+echo >> conf/local.conf
+
+echo "# whiteliste restricted license" >> conf/local.conf
+echo "LICENSE_FLAGS_WHITELIST = \"non-commercial_netperf\"" >> conf/local.conf
+echo >> conf/local.conf
+
+# add uboot image types to hob
+echo "# add uboot image types to hob" >> conf/hob-pre.conf
+echo "INHERIT += \"image_types_uboot\"" >> conf/hob-pre.conf
+echo >> conf/hob-pre.conf
+
+# make an empty hob-post.conf to avoid message about missing file
+echo >> conf/hob-post.conf
+
+# make a SOURCE_THIS file
+echo "#!/bin/sh" >> SOURCE_THIS
+echo ". ${POKY_DIR}/oe-init-build-env `pwd` > /dev/null" >> SOURCE_THIS
+
+exit_message
+cd $PROJECT_DIR
+clean_up
