@@ -266,7 +266,8 @@ if [ ! -z "$fsl_poky_setup_proxy" ];then
     
     # setup cache mirrors
     echo "# The sstate-cache mirrors" >> conf/local.conf
-    echo "SSTATE_MIRRORS = \"file://(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/\\1/\\2 \\n\"" >> conf/local.conf
+    echo "SSTATE_MIRRORS = \"file://.*/(.*)/(.*) file://native/\\1/\\2 \\n\"" >> conf/local.conf
+    echo "SSTATE_MIRRORS += \"file://(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/\\1/\\2 \\n\"" >> conf/local.conf
     echo "SSTATE_MIRRORS += \"file://.*/(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/native/\\1/\\2 \\n\"" >> conf/local.conf
     echo >> conf/local.conf
 fi
