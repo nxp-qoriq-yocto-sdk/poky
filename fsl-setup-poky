@@ -418,6 +418,10 @@ echo "# whiteliste restricted license" >> conf/local.conf
 echo "LICENSE_FLAGS_WHITELIST = \"non-commercial_netperf\"" >> conf/local.conf
 echo >> conf/local.conf
 
+echo "# Generate Bill of Materials" >> conf/local.conf
+echo "COPY_LIC_MANIFEST = \"1\"" >> conf/local.conf
+echo "COPY_LIC_DIRS = \"1\"" >> conf/local.conf
+
 # add uboot image types to hob
 echo "# add uboot image types to hob" >> conf/hob-pre.conf
 echo "INHERIT += \"image_types_uboot\"" >> conf/hob-pre.conf
