@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [[ "$@" =~ "$GIT_PROXY_IGNORE" ]]
+then
+	nc $@
+else
+	/usr/bin/connect-proxy -S wwwgate0.freescale.net:1090 $@
+fi
