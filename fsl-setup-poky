@@ -34,7 +34,7 @@ echo "
     * [-j jobs]:  number of jobs for make to spawn during the compilation stage.
     * [-t tasks]: number of BitBake tasks that can be issued in parallel.
     * [-d path]:  non-default DL_DIR path (download dir)
-    * [-c path]:  non-default SSTATE_DIR path (shard state Cache dir)
+    * [-c path]:  non-default SSTATE_DIR path (shared state Cache dir)
     * [-b path]:  non-default build dir location
     * [-s path]:  append an extra path to build_machine_release folder
     * [-l]:       lite mode. To help conserve disk space, deletes the building 
