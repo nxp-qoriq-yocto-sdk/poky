@@ -257,16 +257,18 @@ else
 fi
 echo >> conf/local.conf
 
+# mirror host specific sstate-cache to common native directory
+echo "INHERIT += \"own-mirrors\"" >> conf/local.conf
+echo "SSTATE_MIRRORS = \"file://.*/(.*)/(.*) file://native/\\1/\\2 \\n\"" >> conf/local.conf
+
 if [ ! -z "$fsl_poky_setup_proxy" ];then
     # setup mirrors
     echo "# Packages source mirrors" >> conf/local.conf
-    echo "INHERIT += \"own-mirrors\"" >> conf/local.conf
     echo "SOURCE_MIRROR_URL = \"http://nas101.am.freescale.net/yocto/downloads/\"" >> conf/local.conf
     echo >> conf/local.conf
     
     # setup cache mirrors
     echo "# The sstate-cache mirrors" >> conf/local.conf
-    echo "SSTATE_MIRRORS = \"file://.*/(.*)/(.*) file://native/\\1/\\2 \\n\"" >> conf/local.conf
     echo "SSTATE_MIRRORS += \"file://(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/\\1/\\2 \\n\"" >> conf/local.conf
     echo "SSTATE_MIRRORS += \"file://.*/(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/native/\\1/\\2 \\n\"" >> conf/local.conf
     echo >> conf/local.conf
