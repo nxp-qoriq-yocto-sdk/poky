@@ -20,10 +20,11 @@ DEPENDS  = "dbus glib-2.0 ppp iptables gnutls \
             ${@base_contains('DISTRO_FEATURES', '3g','ofono', '', d)} \
             "
 
-INC_PR = "r19"
+INC_PR = "r20"
 
 TIST = "--enable-tist"
 TIST_powerpc = ""
+TIST_powerpc64 = ""
 
 EXTRA_OECONF += "\
     ac_cv_path_WPASUPPLICANT=${sbindir}/wpa_supplicant \
