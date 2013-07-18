@@ -72,7 +72,7 @@ exit_message ()
     fi
     
     echo "To return to this build environment later please run:"
-    echo "    source $POKY_DIR/build_${BOARD}_release/SOURCE_THIS"
+    echo "    source ${PROJECT_DIR}/SOURCE_THIS"
 }
 
 clean_up()
@@ -193,12 +193,14 @@ if [ -n "$fsl_poky_setup_t" ] && [[ "$fsl_poky_setup_t" =~ ^[0-9]+$ ]]; then
     THREADS=$fsl_poky_setup_t
 fi
 
-if test $fsl_poky_setup_extra_path; then
-	PROJECT_DIR=`pwd`/build_${BOARD}_release_${fsl_poky_setup_extra_path}
-elif test $fsl_poky_setup_build_path; then
-	PROJECT_DIR=${fsl_poky_setup_build_path}
+if test $fsl_poky_setup_build_path; then
+    PROJECT_DIR=`pwd`/$fsl_poky_setup_build_path
 else
-	PROJECT_DIR=`pwd`/build_${BOARD}_release
+    PROJECT_DIR=`pwd`/build_${BOARD}_release
+fi
+
+if test $fsl_poky_setup_extra_path; then
+    PROJECT_DIR=${PROJECT_DIR}_${fsl_poky_setup_extra_path}
 fi
 
 # Create project directory for specified target board
@@ -240,20 +242,18 @@ echo >> conf/local.conf
 # setup dl_dir
 echo "# Source download dir" >> conf/local.conf
 if test $fsl_poky_setup_dl_path; then
-	echo "DL_DIR = \"$fsl_poky_setup_dl_path\"" >> conf/local.conf
+    echo "DL_DIR = \"$fsl_poky_setup_dl_path\"" >> conf/local.conf
 else
-	echo "DL_DIR = \"$PROJECT_DIR/../sources\"" >> conf/local.conf
+    echo "DL_DIR = \"$POKY_DIR/sources\"" >> conf/local.conf
 fi
 echo >> conf/local.conf
 
 # setup cache dir
 echo "# The sstate-cache dir" >> conf/local.conf
 if test $fsl_poky_setup_sstate_path; then
-        echo "SSTATE_DIR = \"$fsl_poky_setup_sstate_path\"" >> conf/local.conf
-elif test $fsl_poky_setup_build_path; then
-        echo "SSTATE_DIR = \"$PROJECT_DIR/sstate-cache\"" >> conf/local.conf
+    echo "SSTATE_DIR = \"$fsl_poky_setup_sstate_path\"" >> conf/local.conf
 else
-        echo "SSTATE_DIR = \"$PROJECT_DIR/../sstate-cache\"" >> conf/local.conf
+    echo "SSTATE_DIR = \"$POKY_DIR/sstate-cache\"" >> conf/local.conf
 fi
 echo >> conf/local.conf
 
