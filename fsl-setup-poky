@@ -244,7 +244,7 @@ echo "# Source download dir" >> conf/local.conf
 if test $fsl_poky_setup_dl_path; then
     echo "DL_DIR = \"$fsl_poky_setup_dl_path\"" >> conf/local.conf
 else
-    echo "DL_DIR = \"$POKY_DIR/sources\"" >> conf/local.conf
+    echo "DL_DIR = \"$PROJECT_DIR/../sources\"" >> conf/local.conf
 fi
 echo >> conf/local.conf
 
@@ -253,7 +253,7 @@ echo "# The sstate-cache dir" >> conf/local.conf
 if test $fsl_poky_setup_sstate_path; then
     echo "SSTATE_DIR = \"$fsl_poky_setup_sstate_path\"" >> conf/local.conf
 else
-    echo "SSTATE_DIR = \"$POKY_DIR/sstate-cache\"" >> conf/local.conf
+    echo "SSTATE_DIR = \"$PROJECT_DIR/../sstate-cache\"" >> conf/local.conf
 fi
 echo >> conf/local.conf
 
