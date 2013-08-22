@@ -28,6 +28,9 @@ SRC_URI[sha256sum] = "b38de44862a987293cd3d8dfae1c409d514b6c4e794ebc93648febf9af
 # Don't want paths to sed-native (or anything else) encoded
 CACHED_CONFIGUREVARS += "ac_cv_path_SED=sed"
 
+# force configure to use /bin/bash
+CACHED_CONFIGUREVARS += "CONFIG_SHELL=/bin/bash"
+
 do_compile_prepend () {
 	# Sometimes this file doesn't get rebuilt, force the issue
 	rm -f ${S}/libltdl/config/ltmain.sh
@@ -52,4 +55,4 @@ FILES_libltdl-dev = "${libdir}/libltdl${SOLIBSDEV} ${includedir}"
 FILES_libltdl-staticdev = "${libdir}/libltdl.a"
 FILES_libltdl-dbg = "${libdir}/.debug/"
 
-EXTRA_OECONF = "--with-sysroot"
+EXTRA_OECONF = "CONFIG_SHELL=/bin/bash --with-sysroot"
