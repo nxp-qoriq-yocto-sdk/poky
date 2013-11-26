@@ -355,8 +355,8 @@ EOF
     fi
 
     # enable 32/64bit multilib if machine is e6500(-64b) or e5500(-64b)
-    if echo "$MACHINE" |egrep -q "(p5020|p5040|t4240|t4160|b4420|b4860)"; then
-        if echo "$MACHINE" |egrep -q "(t4240|t4160|b4420|b4860)"; then
+    if echo "$MACHINE" |egrep -q "(p5020|p5040|t4240|t4160|b4420|b4860|t1040qds|t2080qds)"; then
+        if echo "$MACHINE" |egrep -q "(t4240|t4160|b4420|b4860|t2080qds)"; then
             ARCH="e6500"
         else
             ARCH="e5500"
