@@ -9,9 +9,11 @@ SECTION = "base"
 LICENSE = "LGPL2.1"
 DEPENDS = "sqlite3"
 
-SRC_URI_append_class-nativesdk = " file://symver.patch"
-
-SRC_URI_append_class-native = " file://symver.patch"
+SYMVER = ""
+SYMVER_x86-64 = " file://symver.patch"
+SYMVER_i686 = " file://symver.patch"
+SRC_URI_append_class-nativesdk = "${SYMVER}"
+SRC_URI_append_class-native = "${SYMVER}"
 
 FILES_${PN} = "${prefix}/lib/pseudo/lib*/libpseudo.so ${bindir}/* ${localstatedir}/pseudo ${prefix}/var/pseudo"
 FILES_${PN}-dbg += "${prefix}/lib/pseudo/lib*/.debug"
