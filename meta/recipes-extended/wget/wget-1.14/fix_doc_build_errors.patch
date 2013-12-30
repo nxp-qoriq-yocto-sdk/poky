@@ -1,0 +1,71 @@
+Fix documentation build errors with Texinfo 5 and Perl 5.18
+
+wget-1.14/doc/wget.texi wget.pod
+| /usr/bin/pod2man --center="GNU Wget" --release="GNU Wget 1.14" wget.pod > wget.1
+| wget.pod around line 2105: Expected text after =item, not a number
+| wget.pod around line 2110: Expected text after =item, not a number
+| wget.pod around line 2116: Expected text after =item, not a number
+| wget.pod around line 2121: Expected text after =item, not a number
+| wget.pod around line 2126: Expected text after =item, not a number
+| wget.pod around line 2131: Expected text after =item, not a number
+| wget.pod around line 2136: Expected text after =item, not a number
+| wget.pod around line 2141: Expected text after =item, not a number
+| POD document had syntax errors at /usr/bin/pod2man line 69.
+
+Upstream-Status: Backport
+
+Signed-off-by: Zongchun Yu <Zongchun.Yu@freescale.com>
+
+Index: wget-1.14/doc/texi2pod.pl
+===================================================================
+--- wget-1.14.orig/doc/texi2pod.pl
++++ wget-1.14/doc/texi2pod.pl
+@@ -291,7 +291,7 @@ while(<$inf>) {
+ 	if (defined $1) {
+             my $thing = $1;
+             if ($ic =~ /\@asis/) {
+-                $_ = "\n=item $thing\n";
++                $_ = "\n=item C<$thing>\n";
+             } else {
+                 # Entity escapes prevent munging by the <> processing below.
+                 $_ = "\n=item $ic\&LT;$thing\&GT;\n";
+Index: wget-1.14/doc/wget.texi
+===================================================================
+--- wget-1.14.orig/doc/wget.texi
++++ wget-1.14/doc/wget.texi
+@@ -876,7 +876,7 @@ recommendation to block many unrelated u
+ actions of one.
+ 
+ @cindex proxy
+-@itemx --no-proxy
++@item --no-proxy
+ Don't use proxies, even if the appropriate @code{*_proxy} environment
+ variable is defined.
+ 
+@@ -977,7 +977,7 @@ are outside the range of @sc{ascii} char
+ whose encoding does not match the one used locally.
+ 
+ @cindex IPv6
+-@itemx -4
++@item -4
+ @itemx --inet4-only
+ @itemx -6
+ @itemx --inet6-only
+@@ -3094,7 +3094,7 @@ display properly---the same as @samp{-p}
+ Change setting of passive @sc{ftp}, equivalent to the
+ @samp{--passive-ftp} option.
+ 
+-@itemx password = @var{string}
++@item password = @var{string}
+ Specify password @var{string} for both @sc{ftp} and @sc{http} file retrieval. 
+ This command can be overridden using the @samp{ftp_password} and 
+ @samp{http_password} command for @sc{ftp} and @sc{http} respectively.
+@@ -3605,7 +3605,7 @@ In addition to the environment variables
+ may be specified from within Wget itself.
+ 
+ @table @samp
+-@itemx --no-proxy
++@item --no-proxy
+ @itemx proxy = on/off
+ This option and the corresponding command may be used to suppress the
+ use of proxy, even if the appropriate environment variables are set.
