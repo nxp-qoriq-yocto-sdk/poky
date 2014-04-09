@@ -131,8 +131,8 @@ python do_multilib_install() {
         if not tune_bitness:
             tune_bitness = '32' # /lib => 32bit lib
 
-        src = '../../../' + tune_baselib + '/' + \
-            tune_arch + d.getVar('TARGET_VENDOR', True) + 'ml' + ml + \
+        vendor = d.getVar('TARGET_VENDOR_virtclass-multilib' + '-' + ml, True)
+        src = '../../../' + tune_baselib + '/' + tune_arch + vendor + \
             '-' + d.getVar('TARGET_OS', True) + '/' + binv + '/'
 
         dest = d.getVar('D', True) + d.getVar('libdir', True) + '/' + \
