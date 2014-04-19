@@ -96,7 +96,6 @@ EXTRA_OEMAKE += "\
 # prevents 64-bit userland from seeing this definition, instead defaulting
 # to u64 == long in userspace. Define __SANE_USERSPACE_TYPES__ to get 
 # int-ll64.h included. And MIPS64 has the same issue.
-EXTRA_OEMAKE_append_powerpc64 = ' CFLAGS=-D__SANE_USERSPACE_TYPES__'
 EXTRA_OEMAKE_append_mips64 = ' CFLAGS=-D__SANE_USERSPACE_TYPES__'
 
 PARALLEL_MAKE = ""
