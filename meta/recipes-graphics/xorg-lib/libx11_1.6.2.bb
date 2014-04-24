@@ -1,6 +1,9 @@
 require libx11.inc
 inherit gettext
 
+BUILD_CPPFLAGS_append_class-native = " -ffreestanding"
+BUILD_CPPFLAGS_append_class-nativesdk= " -ffreestanding"
+
 BBCLASSEXTEND = "native nativesdk"
 
 SRC_URI += "file://disable_tests.patch \
