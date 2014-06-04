@@ -829,7 +829,10 @@ def try_mirror_url(origud, ud, ld, check = False):
                 # Broken symbolic link
                 os.unlink(origud.localpath)
 
-            os.symlink(ud.localpath, origud.localpath)
+            bb.utils.mkdirhier(os.path.dirname(origud.localpath))
+            src = os.path.join(dldir, ud.localpath)
+            os.symlink(src, origud.localpath)
+
         update_stamp(origud, ld)
         return ud.localpath
 
