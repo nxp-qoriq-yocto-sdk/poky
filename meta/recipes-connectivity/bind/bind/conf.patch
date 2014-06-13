@@ -291,7 +291,7 @@ diff -urN bind-9.3.1.orig/init.d bind-9.3.1/init.d
 +	if [ -x /sbin/resolvconf ]; then
 +	    /sbin/resolvconf -d lo
 +	fi
-+	/usr/sbin/rndc stop >/dev/null 2>&1
++	# /usr/sbin/rndc stop >/dev/null 2>&1
 +	echo "."	
 +    ;;
 +
