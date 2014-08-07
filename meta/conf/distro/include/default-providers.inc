@@ -45,3 +45,5 @@ PREFERRED_PROVIDER_udev ?= "${@base_contains('DISTRO_FEATURES','systemd','system
 PREFERRED_PROVIDER_bluez4 ?= "bluez4"
 # Alternative is ltp-ddt in meta-oe: meta-oe/recipes-devtools/ltp-ddt/ltp-ddt_0.0.4.bb
 PREFERRED_PROVIDER_ltp ?= "ltp"
+PREFERRED_PROVIDER_jpeg ?= "jpeg"
+PREFERRED_PROVIDER_jpeg-native ?= "jpeg-native"
