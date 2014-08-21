@@ -13,7 +13,10 @@ SRC_URI += "${SOURCEFORGE_MIRROR}/${BPN}/${BPN}-${PV}.tar.gz \
             file://0001-Change-configure-to-look-for-libpfm4-function-first-.patch \
             file://0001-ophelp-lists-events-Fix-doc-URL-for-ppc64-arch.patch \
             file://0001-Allow-ppc64-events-to-be-specified-with-or-without-_.patch \
-            file://0001-Fix-PPC64-specific-libpfm-usage-so-it-doesn-t-break-.patch"
+            file://0001-Fix-PPC64-specific-libpfm-usage-so-it-doesn-t-break-.patch \
+            file://0001-Add-freescale-e500mc-support.patch \
+            file://0002-Add-freescale-e6500-support.patch \
+            "
 
 SRC_URI[md5sum] = "6d127023af1dd1cf24e15411229f3cc8"
 SRC_URI[sha256sum] = "ab45900fa1a23e5d5badf3c0a55f26c17efe6e184efcf00b371433751fa761bc"
