@@ -44,6 +44,10 @@ SRC_URI_append_class-nativesdk = " \
 SRC_URI[md5sum] = "b8608d8294ac88974f27b20f991c0e79"
 SRC_URI[sha256sum] = "633f5bb4ea0c88c55f3642c97f9d25cbef74f82e0b4cf8d54e7ad6f9f9caa778"
 
+SRC_URI_append_class-native = " http://gate.crashing.org/~fray/shadow-native-block-groupadd-and-useradd.patch;name=patch"
+SRC_URI[patch.md5sum] = "1751338544022df9ba8a7474ebac130b"
+SRC_URI[patch.sha256sum] = "cbba71baac45f9d66bd46a7ae768557a634a323040811e65fa01ac10046fb0df"
+
 PR = "r14"
 
 # Additional Policy files for PAM
