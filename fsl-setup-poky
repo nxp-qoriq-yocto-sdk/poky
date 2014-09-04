@@ -88,9 +88,9 @@ elif [ -e ${POKY_DIR}/../meta-fsl-multimedia ]; then
 fi
 
 # Check if meta-fsl-local-sdk layer exists
-if [ -e ${POKY_DIR}/meta-fsl-local-sdk ]; then
+if [ -e ${POKY_DIR}/../meta-fsl-local-sdk ]; then
     LOCALSDK_LAYER_PATH="${POKY_DIR}/meta-fsl-local-sdk"
-elif [ -e ${POKY_DIR}/../meta-fsl-local-sdk ]; then
+elif [ -e ${POKY_DIR}/../../meta-fsl-local-sdk ]; then
     LOCALSDK_LAYER_PATH="${POKY_DIR}/../meta-fsl-local-sdk"
 fi
 
