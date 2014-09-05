@@ -89,9 +89,9 @@ fi
 
 # Check if meta-fsl-local-sdk layer exists
 if [ -e ${POKY_DIR}/../meta-fsl-local-sdk ]; then
-    LOCALSDK_LAYER_PATH="${POKY_DIR}/meta-fsl-local-sdk"
-elif [ -e ${POKY_DIR}/../../meta-fsl-local-sdk ]; then
     LOCALSDK_LAYER_PATH="${POKY_DIR}/../meta-fsl-local-sdk"
+elif [ -e ${POKY_DIR}/../../meta-fsl-local-sdk ]; then
+    LOCALSDK_LAYER_PATH="${POKY_DIR}/../../meta-fsl-local-sdk"
 fi
 
 if [ -e "$PPC_LAYER_PATH" ]; then
