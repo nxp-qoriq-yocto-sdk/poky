@@ -1,3 +1,5 @@
+Re-spin for valgrind-3.10.0. Original patch by: Dave Lerner <dave.lerner@windriver.com>
+
 Remove test apps not building with ppc and PTEST
 
 For mpc8316-rdb in none/tests/ppc32, the oe compiler options are
@@ -32,44 +34,52 @@ In none/tests/ppc32
  test_dfp5.c:73
     : impossible constraint in 'asm'
 
-Upstream-Status: Pending
-
-Signed-off-by: Dave Lerner <dave.lerner@windriver.com>
-
-diff --git a/memcheck/tests/ppc32/Makefile.am b/memcheck/tests/ppc32/Makefile.am
-index bd70eea..1436e8e 100644
---- a/memcheck/tests/ppc32/Makefile.am
-+++ b/memcheck/tests/ppc32/Makefile.am
-@@ -7,8 +7,7 @@ EXTRA_DIST = $(noinst_SCRIPTS) \
- 	power_ISA2_05.stderr.exp power_ISA2_05.stdout.exp power_ISA2_05.vgtest \
- 	power_ISA2_05.stdout.exp_Without_FPPO
- 
--check_PROGRAMS = \
--	power_ISA2_05
-+check_PROGRAMS = 
- 
- power_ISA2_05_CFLAGS = $(AM_CFLAGS) $(WERROR) -Winline -Wall -Wshadow -g \
- 		-I$(top_srcdir)/include @FLAG_M32@
-diff --git a/none/tests/ppc32/Makefile.am b/none/tests/ppc32/Makefile.am
-index 4f581b6..91ce7e7 100644
---- a/none/tests/ppc32/Makefile.am
-+++ b/none/tests/ppc32/Makefile.am
-@@ -50,16 +50,8 @@ check_PROGRAMS = \
- 	allexec \
- 	bug129390-ppc32 \
- 	bug139050-ppc32 \
--	ldstrev lsw jm-insns mftocrf mcrfs round test_fx test_gx \
--	testVMX twi tw xlc_dbl_u32 power5+_round power6_bcmp \
--	test_isa_2_06_part1 \
--	test_isa_2_06_part2 \
--	test_isa_2_06_part3 \
--	test_dfp1 test_dfp2 test_dfp3 test_dfp4 test_dfp5 \
--	test_isa_2_07_part1 \
--	test_isa_2_07_part2 \
--	test_tm \
--	test_touch_tm
-+	ldstrev lsw mftocrf mcrfs test_fx test_gx \
-+	twi tw xlc_dbl_u32 power6_bcmp 
- 
- AM_CFLAGS    += @FLAG_M32@
- AM_CXXFLAGS  += @FLAG_M32@
+*** a/memcheck/tests/ppc32/Makefile.am.orig	2014-11-05 14:53:07.475781299 -0600
+--- b/memcheck/tests/ppc32/Makefile.am	2014-11-05 14:55:52.653779160 -0600
+***************
+*** 7,14 ****
+  	power_ISA2_05.stderr.exp power_ISA2_05.stdout.exp power_ISA2_05.vgtest \
+  	power_ISA2_05.stdout.exp_Without_FPPO
+  
+! check_PROGRAMS = \
+! 	power_ISA2_05
+  
+  power_ISA2_05_CFLAGS = $(AM_CFLAGS) $(WERROR) -Winline -Wall -Wshadow -g \
+  		-I$(top_srcdir)/include @FLAG_M32@
+--- 7,13 ----
+  	power_ISA2_05.stderr.exp power_ISA2_05.stdout.exp power_ISA2_05.vgtest \
+  	power_ISA2_05.stdout.exp_Without_FPPO
+  
+! check_PROGRAMS =
+  
+  power_ISA2_05_CFLAGS = $(AM_CFLAGS) $(WERROR) -Winline -Wall -Wshadow -g \
+  		-I$(top_srcdir)/include @FLAG_M32@
+*** a/none/tests/ppc32/Makefile.am.orig	2014-11-05 15:12:11.298529745 -0600
+--- b/none/tests/ppc32/Makefile.am	2014-11-05 15:16:01.244529244 -0600
+***************
+*** 52,67 ****
+  	allexec \
+  	bug129390-ppc32 \
+  	bug139050-ppc32 \
+! 	ldstrev lsw jm-insns mftocrf mcrfs round test_fx test_gx \
+! 	testVMX twi tw xlc_dbl_u32 power5+_round power6_bcmp \
+! 	test_isa_2_06_part1 \
+! 	test_isa_2_06_part2 \
+! 	test_isa_2_06_part3 \
+! 	test_dfp1 test_dfp2 test_dfp3 test_dfp4 test_dfp5 \
+! 	test_isa_2_07_part1 \
+! 	test_isa_2_07_part2 \
+! 	test_tm \
+! 	test_touch_tm \
+  	ldst_multiple \
+  	data-cache-instructions
+  
+--- 52,59 ----
+  	allexec \
+  	bug129390-ppc32 \
+  	bug139050-ppc32 \
+! 	ldstrev lsw mftocrf mcrfs test_fx test_gx \
+! 	twi tw xlc_dbl_u32 power6_bcmp \
+  	ldst_multiple \
+  	data-cache-instructions
+  
