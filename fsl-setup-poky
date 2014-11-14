@@ -406,6 +406,11 @@ EOF
         echo >> conf/local.conf
     fi
 
+    if echo "$MACHINE" |egrep -q "^(b4|p5|t1|t2|t4)"; then
+        # disable prelink for e5500/e6500
+        sed -i s/image-mklibs.image-prelink/image-mklibs/g conf/local.conf
+    fi
+
     if echo "$IMX_ARM_MACHINE" |egrep -q "(${MACHINE}$|${MACHINE} +)"; then
         # Handle EULA setting
         if [ -z "$EULA" ] && ! grep -q '^ACCEPT_FSL_EULA\s*=' conf/local.conf; then
