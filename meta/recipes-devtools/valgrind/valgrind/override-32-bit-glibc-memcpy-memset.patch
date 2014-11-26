@@ -1,0 +1,156 @@
+
+ Override the 32-bit implementations of memcpy(), memset() from glibc.
+
+ On 64-bit platforms, for 32-bit mode, the Freescale optimized implementations
+ of the glibc functions memcpy(), memset() use POWER ISA Category:64-bit
+ instructions. By design, these are not implementatble in Valgrind in 32-bit
+ mode. Therefore, we override the library versions with plain classic POWER
+ 32-bit alternate versions (emitted at -O0 by GCC).
+
+ Note that this does not affect in any way, the user's ability to debug their
+ code with Valgrind.
+
+Index: coregrind/pub_core_trampoline.h
+===================================================================
+--- a/coregrind/pub_core_trampoline.h	(revision 14779)
++++ b/coregrind/pub_core_trampoline.h	(working copy)
+@@ -79,6 +79,8 @@
+ extern UInt  VG_(ppc32_linux_REDIR_FOR_strlen)( void* );
+ extern UInt  VG_(ppc32_linux_REDIR_FOR_strcmp)( void*, void* );
+ extern void* VG_(ppc32_linux_REDIR_FOR_strchr)( void*, Int );
++extern void *VG_(ppc32_linux_fsl_REDIR_FOR_memcpy)(void *dest, const void *src, Int n);
++extern void *VG_(ppc32_linux_fsl_REDIR_FOR_memset)(void *s, Int c, Int n);
+ #endif
+ 
+ #if defined(VGP_ppc64be_linux) || defined(VGP_ppc64le_linux)
+Index: coregrind/m_trampoline.S
+===================================================================
+--- a/coregrind/m_trampoline.S	(revision 14779)
++++ b/coregrind/m_trampoline.S	(working copy)
+@@ -307,6 +307,105 @@
+ .global VG_(trampoline_stuff_start)
+ VG_(trampoline_stuff_start):
+ 
++/* To obtain the assembly below, do: gcc -S -m32 on:
++#define VG_(x) x
++
++void *VG_(ppc32_linux_fsl_REDIR_FOR_memcpy)(char *dst, const char *src, int n)
++{
++  const char *p;
++  char *q = dst;
++  p = src;
++  while ((p - src) < n)
++    *q++ = *p++;
++  return dst;
++}
++*/
++.align 2
++.globl VG_(ppc32_linux_fsl_REDIR_FOR_memcpy)
++.type   VG_(ppc32_linux_fsl_REDIR_FOR_memcpy), @function
++VG_(ppc32_linux_fsl_REDIR_FOR_memcpy):
++        stwu 1,-48(1)
++        stw 31,44(1)
++        mr 31,1
++        stw 3,24(31)
++        stw 4,28(31)
++        stw 5,32(31)
++        lwz 9,24(31)
++        stw 9,12(31)
++        lwz 9,28(31)
++        stw 9,8(31)
++        b .L2
++.L3:   
++        lwz 9,12(31)
++        addi 10,9,1
++        stw 10,12(31)
++        lwz 10,8(31)
++        addi 8,10,1
++        stw 8,8(31)
++        lbz 10,0(10)
++        rlwinm 10,10,0,0xff
++        stb 10,0(9)
++.L2:   
++        lwz 10,8(31)
++        lwz 9,28(31)
++        subf 10,9,10
++        lwz 9,32(31)
++        cmpw 7,10,9
++        blt 7,.L3
++        lwz 9,24(31)
++        mr 3,9
++        addi 11,31,48
++        lwz 31,-4(11)
++        mr 1,11
++        blr
++.size   VG_(ppc32_linux_fsl_REDIR_FOR_memcpy),.-VG_(ppc32_linux_fsl_REDIR_FOR_memcpy)
++
++/* To obtain the assembly below, do: gcc -S -m32 on:
++#define VG_(x) x
++void *VG_(ppc32_linux_fsl_REDIR_FOR_memset)(char *s, int c, int n)
++{
++  char *p;
++  p = s;
++  while ((p - s) < n)
++    *p++ = c;
++  return s;
++}
++ */
++.align 2
++.globl VG_(ppc32_linux_fsl_REDIR_FOR_memset)
++.type   VG_(ppc32_linux_fsl_REDIR_FOR_memset), @function
++VG_(ppc32_linux_fsl_REDIR_FOR_memset):
++        stwu 1,-48(1)
++        stw 31,44(1)
++        mr 31,1
++        stw 3,24(31)
++        stw 4,28(31)
++        stw 5,32(31)
++        lwz 9,24(31)
++        stw 9,8(31)
++        b .L6
++.L7:
++        lwz 9,8(31)
++        addi 10,9,1
++        stw 10,8(31)
++        lwz 10,28(31)
++        rlwinm 10,10,0,0xff
++        stb 10,0(9)
++.L6:   
++        lwz 10,8(31)
++        lwz 9,24(31)
++        subf 10,9,10
++        lwz 9,32(31)
++        cmpw 7,10,9
++        blt 7,.L7
++        lwz 9,24(31)
++        mr 3,9
++        addi 11,31,48
++        lwz 31,-4(11)
++        mr 1,11
++        blr
++.size   VG_(ppc32_linux_fsl_REDIR_FOR_memset),.-VG_(ppc32_linux_fsl_REDIR_FOR_memset)
++
+ .global VG_(ppc32_linux_SUBST_FOR_sigreturn)
+ VG_(ppc32_linux_SUBST_FOR_sigreturn):
+ 	li 0,__NR_sigreturn
+Index: coregrind/m_redir.c
+===================================================================
+--- a/coregrind/m_redir.c	(revision 14779)
++++ b/coregrind/m_redir.c	(working copy)
+@@ -1284,6 +1284,16 @@
+    }
+ 
+ #  elif defined(VGP_ppc32_linux)
++   add_hardwired_spec(
++      "ld.so.1", "memcpy",
++      (Addr)VG_(fnptr_to_fnentry)( &VG_(ppc32_linux_fsl_REDIR_FOR_memcpy) ),
++         complain_about_stripped_glibc_ldso
++   );
++   add_hardwired_spec(
++      "ld.so.1", "memset",
++      (Addr)VG_(fnptr_to_fnentry)( &VG_(ppc32_linux_fsl_REDIR_FOR_memset) ),
++         complain_about_stripped_glibc_ldso
++   );
+    /* If we're using memcheck, use these intercepts right from
+       the start, otherwise ld.so makes a lot of noise. */
+    if (0==VG_(strcmp)("Memcheck", VG_(details).name)) {
