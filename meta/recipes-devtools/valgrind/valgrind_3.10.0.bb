@@ -22,6 +22,7 @@ SRC_URI = "http://www.valgrind.org/downloads/valgrind-${PV}.tar.bz2 \
            file://add-ptest.patch \
            file://run-ptest \
            file://override-32-bit-glibc-memcpy-memset.patch \
+           file://AvSplat.patch \
           "
 
 SRC_URI[md5sum] = "7c311a72a20388aceced1aa5573ce970"

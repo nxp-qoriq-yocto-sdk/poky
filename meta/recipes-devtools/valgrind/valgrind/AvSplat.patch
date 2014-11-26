@@ -1,0 +1,39 @@
+
+ POWER AvSplat ought to load destination vector register with 16/16 bytes stored prior.
+
+ Note: This patch has been upstreamed to the Valgrind repository (post valgrind-3.10.0),
+       but should be in valgrind-3.10.1 The committer's comment below, is modified to
+       indicate that this defect was found on the Freescale e6500 specifically.
+
+ The function mk_AvDuplicateRI() stores 16 bytes to memory and then
+ fetches the data into a vector register.  The load was being 
+ generated as a lvewx instead of a lvx instruction by the code:
+ 
+       /* Effectively splat the r_src value to dst */
+       addInstr(env, PPCInstr_AvLdSt( True/*ld*/, 4, dst, am_offset_zero ) );
+ 
+ The second argument controls which load instruction is generated.  The
+ second argument should have been 16 to generate the lvx instruction not
+ the lvewx instruction.  The issue was reported on the Freescale e6500 processor
+ for the vsptlb instruction.  The issue was not detected before because 
+ the backend code generation used the same vector register to load into 
+ as was used previously to create the data.  However, the code generation
+ is dependent on the HW/Distro/compiler.  If the same register isn't used
+ the bug appears.  The issue was found with Valgrind 3.10.0 on the Freescale
+ e6500 processor as the Valgrind code generation didn't happen to pick the same
+ register to do the load into.  
+
+Index: VEX/priv/host_ppc_isel.c
+===================================================================
+--- a/VEX/priv/host_ppc_isel.c	(revision 2953)
++++ b/VEX/priv/host_ppc_isel.c	(working copy)
+@@ -1327,7 +1327,7 @@
+       }
+ 
+       /* Effectively splat the r_src value to dst */
+-      addInstr(env, PPCInstr_AvLdSt( True/*ld*/, 4, dst, am_offset_zero ) );
++      addInstr(env, PPCInstr_AvLdSt( True/*ld*/, 16, dst, am_offset_zero ) );
+       add_to_sp( env, 32 );       // Reset SP
+ 
+       return dst;
+
