@@ -318,7 +318,7 @@ if [ "x${SKIP_CONFIG}" = "x1" ]; then
     echo "Your configuration files at $PROJECT_DIR/conf/ has not been touched."
     prompt_message && clean_up
     return
-else
+fi
     # add layers
     for layer in $(eval echo $APPEND_LAYER_LIST); do
         append_layer=""
@@ -446,8 +446,6 @@ EOF
         echo ". ./oe-init-build-env > /dev/null" >> SOURCE_THIS
         echo "echo \"Back to build project $PROJECT_DIR.\"" >> SOURCE_THIS
     fi
-
-fi
 
 prompt_message
 cd $PROJECT_DIR
