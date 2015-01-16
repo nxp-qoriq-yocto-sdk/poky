@@ -358,23 +358,23 @@ for layer in $(eval echo $APPEND_LAYER_LIST); do
 done
 
 cat >> conf/local.conf <<-EOF
-    MACHINE ?= "$MACHINE"
-    DISTRO = "$DISTRO"
-    # Parallelism Options
-    BB_NUMBER_THREADS = "$THREADS"
-    PARALLEL_MAKE = "-j $JOBS"
-    DL_DIR = "$DOWNLOADS"
-    SSTATE_DIR = "$CACHES"
-    # mirror host sstate-cache to native directory
-    SSTATE_MIRRORS = "file://.*/(.*)/(.*) file://native/\\1/\\2 \\n"
+MACHINE ?= "$MACHINE"
+DISTRO = "$DISTRO"
+# Parallelism Options
+BB_NUMBER_THREADS = "$THREADS"
+PARALLEL_MAKE = "-j $JOBS"
+DL_DIR = "$DOWNLOADS"
+SSTATE_DIR = "$CACHES"
+# mirror host sstate-cache to native directory
+SSTATE_MIRRORS = "file://.*/(.*)/(.*) file://native/\\1/\\2 \\n"
 EOF
 
 # setup fsl private mirrors
 if [ ! -z "$setup_mirrors" ];then
     cat >> conf/local.conf <<-EOF
-        # sstate-cache mirrors
-        SSTATE_MIRRORS += "file://(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/\\1/\\2 \\n"
-        SSTATE_MIRRORS += "file://.*/(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/native/\\1/\\2 \\n"
+# sstate-cache mirrors
+SSTATE_MIRRORS += "file://(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/\\1/\\2 \\n"
+SSTATE_MIRRORS += "file://.*/(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/native/\\1/\\2 \\n"
 EOF
 fi
 
@@ -395,9 +395,9 @@ if echo "$IMX_MACHINE" |egrep -q "(${MACHINE}$|${MACHINE} +)"; then
     if [ -z "$EULA" ] && ! grep -q '^ACCEPT_FSL_EULA\s*=' conf/local.conf; then
         EULA='ask'
         cat <<-EOF
-            Some SoC depends on libraries and packages that are covered by
-            Freescale EULA. To have the right to use those binaries in your images
-            you need to read and accept the EULA that will be displayed.
+Some SoC depends on libraries and packages that are covered by
+Freescale EULA. To have the right to use those binaries in your images
+you need to read and accept the EULA that will be displayed.
 EOF
         sleep 4
 
