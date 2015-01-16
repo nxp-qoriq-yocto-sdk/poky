@@ -302,20 +302,21 @@ fi
 if test $setup_string; then
     PROJECT_DIR="${PROJECT_DIR}_${setup_string}"
 fi
-PROJECT_DIR=`readlink -f "$PROJECT_DIR"`
 
 if test $setup_download; then
     DOWNLOADS="$setup_download"
 else
-    DOWNLOADS="$PROJECT_DIR/../sources"
+    DOWNLOADS="$POKY_DIR/../sources"
 fi
+mkdir -p $DOWNLOADS
 DOWNLOADS=`readlink -f "$DOWNLOADS"`
 
 if test $setup_sstate; then
     CACHES="$setup_sstate"
 else
-    CACHES="$PROJECT_DIR/../sstate-cache"
+    CACHES="$POKY_DIR/../sstate-cache"
 fi
+mkdir -p $CACHES
 CACHES=`readlink -f "$CACHES"`
 
 # check if project folder was created before
