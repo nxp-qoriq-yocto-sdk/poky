@@ -109,6 +109,7 @@ fi
 if [ -e "$ARM_LAYER" ]; then
     if [ -e "${MULTIMEDIA_LAYER}" ]; then
         IMX_MACHINE="`ls ${ARM_LAYER}/conf/machine | grep -v "^include" | grep -v "^ls" | sed s/\.conf//g | xargs echo`"
+    fi
     if [ -e "${NETWORKING_LAYER}" ]; then
         LS_MACHINE="`ls ${ARM_LAYER}/conf/machine | grep "^ls" | sed s/\.conf//g | xargs echo`"
     fi
