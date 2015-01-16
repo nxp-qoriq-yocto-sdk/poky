@@ -60,71 +60,71 @@ fi
 
 # Check if meta-fsl-ppc layer exists
 if [ -e ${POKY_DIR}/../meta-fsl-ppc ]; then
-    PPC_LAYER_PATH="${POKY_DIR}/../meta-fsl-ppc"
+    PPC_LAYER="${POKY_DIR}/../meta-fsl-ppc"
 elif [ -e ${POKY_DIR}/meta-fsl-ppc ]; then
-    PPC_LAYER_PATH="${POKY_DIR}/meta-fsl-ppc"
+    PPC_LAYER="${POKY_DIR}/meta-fsl-ppc"
 fi
 
 # Check if meta-fsl-arm layer exists
 if [ -e ${POKY_DIR}/../meta-fsl-arm ]; then
-    ARM_LAYER_PATH="${POKY_DIR}/../meta-fsl-arm"
+    ARM_LAYER="${POKY_DIR}/../meta-fsl-arm"
 elif [ -e ${POKY_DIR}/meta-fsl-arm ]; then
-    ARM_LAYER_PATH="${POKY_DIR}/meta-fsl-arm"
+    ARM_LAYER="${POKY_DIR}/meta-fsl-arm"
 fi
 
-if [ "x$PPC_LAYER_PATH" = x"" ] && [ "x$ARM_LAYER_PATH" = x"" ]; then
+if [ "x$PPC_LAYER" = x"" ] && [ "x$ARM_LAYER" = x"" ]; then
     echo "WARNING: neither of meta-fsl-{ppc,arm} layer found."
     echo "    They should be at ${POKY_DIR}/../ or ${POKY_DIR}/"
 fi
 
 # Check if meta-fsl-networking layer exists
 if [ -e ${POKY_DIR}/../meta-fsl-networking ]; then
-    NETWORKING_LAYER_PATH="${POKY_DIR}/../meta-fsl-networking"
+    NETWORKING_LAYER="${POKY_DIR}/../meta-fsl-networking"
 elif [ -e ${POKY_DIR}/meta-fsl-networking ]; then
-    NETWORKING_LAYER_PATH="${POKY_DIR}/meta-fsl-networking"
+    NETWORKING_LAYER="${POKY_DIR}/meta-fsl-networking"
 fi
 
 # Check if meta-fsl-multimedia layer exists
 if [ -e ${POKY_DIR}/../meta-fsl-multimedia ]; then
-    MULTIMEDIA_LAYER_PATH="${POKY_DIR}/../meta-fsl-multimedia"
+    MULTIMEDIA_LAYER="${POKY_DIR}/../meta-fsl-multimedia"
 elif [ -e ${POKY_DIR}/meta-fsl-multimedia ]; then
-    MULTIMEDIA_LAYER_PATH="${POKY_DIR}/meta-fsl-multimedia"
+    MULTIMEDIA_LAYER="${POKY_DIR}/meta-fsl-multimedia"
 fi
 
 # Check if meta-fsl-local-sdk layer exists
 if [ -e ${POKY_DIR}/../../meta-fsl-local-sdk ]; then
-    LOCALSDK_LAYER_PATH="${POKY_DIR}/../../meta-fsl-local-sdk"
+    LOCALSDK_LAYER="${POKY_DIR}/../../meta-fsl-local-sdk"
 elif [ -e ${POKY_DIR}/../meta-fsl-local-sdk ]; then
-    LOCALSDK_LAYER_PATH="${POKY_DIR}/../meta-fsl-local-sdk"
+    LOCALSDK_LAYER="${POKY_DIR}/../meta-fsl-local-sdk"
 fi
 
-if [ -e "$PPC_LAYER_PATH" ]; then
-    if [ -e "$LOCALSDK_LAYER_PATH" ]; then
-        QORIQ_PPC_MACHINE="`ls ${PPC_LAYER_PATH}/conf/machine ${LOCALSDK_LAYER_PATH}/conf/machine | grep "\.conf" | sed s/\.conf//g | xargs echo`"
+if [ -e "$PPC_LAYER" ]; then
+    if [ -e "$LOCALSDK_LAYER" ]; then
+        PPC_MACHINE="`ls ${PPC_LAYER}/conf/machine ${LOCALSDK_LAYER}/conf/machine | grep "\.conf" | sed s/\.conf//g | xargs echo`"
     else
-        QORIQ_PPC_MACHINE="`ls ${PPC_LAYER_PATH}/conf/machine | grep "\.conf" | sed s/\.conf//g | xargs echo`"
+        PPC_MACHINE="`ls ${PPC_LAYER}/conf/machine | grep "\.conf" | sed s/\.conf//g | xargs echo`"
     fi
 fi
 
-if [ -e "$ARM_LAYER_PATH" ]; then
-    if [ -e "${MULTIMEDIA_LAYER_PATH}" ]; then
-        IMX_ARM_MACHINE="`ls ${ARM_LAYER_PATH}/conf/machine | grep -v "^include" | grep -v "^ls" | sed s/\.conf//g | xargs echo`"
-    if [ -e "${NETWORKING_LAYER_PATH}" ]; then
-        LS_ARM_MACHINE="`ls ${ARM_LAYER_PATH}/conf/machine | grep "^ls" | sed s/\.conf//g | xargs echo`"
+if [ -e "$ARM_LAYER" ]; then
+    if [ -e "${MULTIMEDIA_LAYER}" ]; then
+        IMX_MACHINE="`ls ${ARM_LAYER}/conf/machine | grep -v "^include" | grep -v "^ls" | sed s/\.conf//g | xargs echo`"
+    if [ -e "${NETWORKING_LAYER}" ]; then
+        LS_MACHINE="`ls ${ARM_LAYER}/conf/machine | grep "^ls" | sed s/\.conf//g | xargs echo`"
     fi
 fi
 
 usage()
 {
     echo "Usage: . $POKY_DIR/fsl-setup-poky <-m machine>"
-    if [ -n "$QORIQ_PPC_MACHINE" ]; then
-        echo "    Supported QorIQ(powerpc) machines: $QORIQ_PPC_MACHINE"
+    if [ -n "$PPC_MACHINE" ]; then
+        echo "    Supported QorIQ(powerpc) machines: $PPC_MACHINE"
     fi
-    if [ -n "$IMX_ARM_MACHINE" ]; then
-        echo "    Supported IMX(arm) machines: $IMX_ARM_MACHINE"
+    if [ -n "$IMX_MACHINE" ]; then
+        echo "    Supported IMX(arm) machines: $IMX_MACHINE"
     fi
-    if [ -n "$LS_ARM_MACHINE" ]; then
-        echo "    Supported layerscape(arm) machines: $LS_ARM_MACHINE"
+    if [ -n "$LS_MACHINE" ]; then
+        echo "    Supported layerscape(arm) machines: $LS_MACHINE"
     fi
     echo "    Optional parameters:
     * [-j jobs]:  number of jobs for make to spawn during the compilation stage.
@@ -155,16 +155,16 @@ prompt_message ()
     echo "Run the following commands to start a build:"
     local i=''
 
-    if echo "$IMX_ARM_MACHINE" |egrep -q "(${MACHINE}$|${MACHINE} +)"; then
-        if [ -e "${MULTIMEDIA_LAYER_PATH}" ]; then
-            for i in `find ${MULTIMEDIA_LAYER_PATH}/ -name "fsl-image-*.bb"`;do
+    if echo "$IMX_MACHINE" |egrep -q "(${MACHINE}$|${MACHINE} +)"; then
+        if [ -e "${MULTIMEDIA_LAYER}" ]; then
+            for i in `find ${MULTIMEDIA_LAYER}/ -name "fsl-image-*.bb"`;do
                 i=${i##*/};i=${i%.bb};
                 echo "    bitbake $i";
             done
         fi
     else
-        if [ -e "${NETWORKING_LAYER_PATH}" ]; then
-            for i in `find ${NETWORKING_LAYER_PATH}/ -name "fsl-image-*.bb"`;do
+        if [ -e "${NETWORKING_LAYER}" ]; then
+            for i in `find ${NETWORKING_LAYER}/ -name "fsl-image-*.bb"`;do
             i=${i##*/};i=${i%.bb};
                 echo "    bitbake $i";
             done
@@ -177,14 +177,12 @@ prompt_message ()
 
 clean_up()
 {
-    unset POKY_DIR PPC_LAYER_PATH ARM_LAYER_PATH NETWORKING_LAYER_PATH \
-        MULTIMEDIA_LAYER_PATH IMX_ARM_MACHINE QORIQ_PPC_MACHINE \
-        LS_ARM_MACHINE PROJECT_DIR MACHINE \
-        setup_flag setup_j setup_t setup_lite setup_mirrors setup_help \
-        setup_string setup_build_path setup_dl_path setup_sstate_path \
-        setup_error SKIP_CONFIG user_input APPEND_LAYER_LIST \
-        layer append_layer DOWNLOADS CACHES \
-        OLD_OPTIND DISTRO CPUS JOBS THREADS ARCH EULA LOCALSDK_LAYER_PATH
+    unset POKY_DIR PROJECT_DIR MACHINE IMX_MACHINE PPC_MACHINE LS_MACHINE \
+        PPC_LAYER ARM_LAYER NETWORKING_LAYER MULTIMEDIA_LAYER LOCALSDK_LAYER \
+        setup_flag setup_j setup_t setup_l setup_h setup_mirrors \
+        setup_string setup_project setup_download setup_sstate setup_error \
+        APPEND_LAYER_LIST layer append_layer \
+        OLD_OPTIND DISTRO CPUS JOBS THREADS ARCH EULA DOWNLOADS CACHES
     unset -f prompt_message usage clean_up
 }
 
@@ -204,19 +202,19 @@ do
            ;;
         t) setup_t="$OPTARG";
            ;;
-        l) setup_lite='true';
+        l) setup_l='true';
            ;;
         p) setup_mirrors='true';
            ;;
-        h) setup_help='true';
+        h) setup_h='true';
            ;;
         s) setup_string="$OPTARG";
            ;;
-        b) setup_build_path="$OPTARG";
+        b) setup_project="$OPTARG";
            ;;
-        d) setup_dl_path="$OPTARG";
+        d) setup_download="$OPTARG";
            ;;
-        c) setup_sstate_path="$OPTARG";
+        c) setup_sstate="$OPTARG";
            ;;
         ?) setup_error='true';
            ;;
@@ -225,12 +223,12 @@ done
 OPTIND=$OLD_OPTIND
 
 # check the "-h" and other not supported options
-if test $setup_error || test $setup_help; then
+if test $setup_error || test $setup_h; then
     usage && clean_up && return 1
 fi
 
 # Check machine name
-if [ -e ${PPC_LAYER_PATH}/conf/machine/${MACHINE}.conf ];then
+if [ -e ${PPC_LAYER}/conf/machine/${MACHINE}.conf ];then
     DISTRO="fsl-networking"
     APPEND_LAYER_LIST=" \
         meta-fsl-ppc \
@@ -252,7 +250,7 @@ if [ -e ${PPC_LAYER_PATH}/conf/machine/${MACHINE}.conf ];then
         meta-cloud-services/meta-openstack-controller-deploy \
         meta-cloud-services/meta-openstack-qemu \
     "
-elif [ -e ${ARM_LAYER_PATH}/conf/machine/${MACHINE}.conf ];then
+elif [ -e ${ARM_LAYER}/conf/machine/${MACHINE}.conf ];then
     if echo "$MACHINE" |egrep -q "^ls"; then
         DISTRO="fsl-networking"
         APPEND_LAYER_LIST=" \
@@ -296,8 +294,8 @@ if echo "$setup_t" | egrep -q "^[0-9]+$"; then
 fi
 
 # set project folder location and name
-if test $setup_build_path; then
-    PROJECT_DIR=`pwd`/${setup_build_path}
+if test $setup_project; then
+    PROJECT_DIR=`pwd`/${setup_project}
 else
     PROJECT_DIR=`pwd`/build_${MACHINE}_release
 fi
@@ -306,15 +304,15 @@ if test $setup_string; then
 fi
 PROJECT_DIR=`readlink -f "$PROJECT_DIR"`
 
-if test $setup_dl_path; then
-    DOWNLOADS="$setup_dl_path"
+if test $setup_download; then
+    DOWNLOADS="$setup_download"
 else
     DOWNLOADS="$PROJECT_DIR/../sources"
 fi
 DOWNLOADS=`readlink -f "$DOWNLOADS"`
 
-if test $setup_sstate_path; then
-    CACHES="$setup_sstate_path"
+if test $setup_sstate; then
+    CACHES="$setup_sstate"
 else
     CACHES="$PROJECT_DIR/../sstate-cache"
 fi
@@ -379,7 +377,7 @@ EOF
 fi
 
 # option to enable lite mode for now
-if test $setup_lite; then
+if test $setup_l; then
     echo "# delete sources after build" >> conf/local.conf
     echo "INHERIT += \"rm_work\"" >> conf/local.conf
     echo >> conf/local.conf
@@ -390,7 +388,7 @@ if echo "$MACHINE" |egrep -q "^(b4|p5|t1|t2|t4)"; then
     sed -i s/image-mklibs.image-prelink/image-mklibs/g conf/local.conf
 fi
 
-if echo "$IMX_ARM_MACHINE" |egrep -q "(${MACHINE}$|${MACHINE} +)"; then
+if echo "$IMX_MACHINE" |egrep -q "(${MACHINE}$|${MACHINE} +)"; then
     # Handle EULA setting
     if [ -z "$EULA" ] && ! grep -q '^ACCEPT_FSL_EULA\s*=' conf/local.conf; then
         EULA='ask'
@@ -401,7 +399,7 @@ if echo "$IMX_ARM_MACHINE" |egrep -q "(${MACHINE}$|${MACHINE} +)"; then
 EOF
         sleep 4
 
-        more -d ${ARM_LAYER_PATH}/EULA
+        more -d ${ARM_LAYER}/EULA
         echo
         while [ "$EULA" = "ask" ]; do
             echo "Do you accept the EULA you just read? (y/n) "
