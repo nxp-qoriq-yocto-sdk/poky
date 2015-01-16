@@ -319,91 +319,88 @@ if [ "x${SKIP_CONFIG}" = "x1" ]; then
     prompt_message && clean_up
     return
 fi
-    # add layers
-    for layer in $(eval echo $APPEND_LAYER_LIST); do
-        append_layer=""
-        if [ -e ${POKY_DIR}/${layer} ]; then
-            append_layer="${POKY_DIR}/${layer}"
-        elif [ -e ${POKY_DIR}/../${layer} ]; then
-            append_layer="${POKY_DIR}/../${layer}"
-        elif [ "x${layer}" = "xmeta-fsl-local-sdk" ] && [ -e ${POKY_DIR}/../../${layer} ]; then
-            append_layer="${POKY_DIR}/../../${layer}"
-        fi
-        if [ -n "${append_layer}" ]; then
-            append_layer=`readlink -f $append_layer`
-            awk '/  \"/ && !x {print "'"  ${append_layer}"' \\"; x=1} 1' conf/bblayers.conf > conf/bblayers.conf~
-            mv conf/bblayers.conf~ conf/bblayers.conf
-        fi
-    done
-
-    # setup machine/distro
-    sed -e "s,MACHINE ??=.*,MACHINE ??= '$MACHINE',g" \
-        -e "s,DISTRO ?=.*,DISTRO ?= '$DISTRO',g" \
-        -i conf/local.conf
-
-    # setup dl_dir
-    echo "# Source download dir" >> conf/local.conf
-    if test $setup_dl_path; then
-        echo "DL_DIR = \"$setup_dl_path\"" >> conf/local.conf
-    else
-        echo "DL_DIR = \"$PROJECT_DIR/../sources\"" >> conf/local.conf
+# add layers
+for layer in $(eval echo $APPEND_LAYER_LIST); do
+    append_layer=""
+    if [ -e ${POKY_DIR}/${layer} ]; then
+        append_layer="${POKY_DIR}/${layer}"
+    elif [ -e ${POKY_DIR}/../${layer} ]; then
+        append_layer="${POKY_DIR}/../${layer}"
+    elif [ "x${layer}" = "xmeta-fsl-local-sdk" ] && [ -e ${POKY_DIR}/../../${layer} ]; then
+        append_layer="${POKY_DIR}/../../${layer}"
     fi
-    echo >> conf/local.conf
-
-    # setup cache dir
-    echo "# The sstate-cache dir" >> conf/local.conf
-    if test $setup_sstate_path; then
-        echo "SSTATE_DIR = \"$setup_sstate_path\"" >> conf/local.conf
-    else
-        echo "SSTATE_DIR = \"$PROJECT_DIR/../sstate-cache\"" >> conf/local.conf
+    if [ -n "${append_layer}" ]; then
+        append_layer=`readlink -f $append_layer`
+        awk '/  \"/ && !x {print "'"  ${append_layer}"' \\"; x=1} 1' conf/bblayers.conf > conf/bblayers.conf~
+        mv conf/bblayers.conf~ conf/bblayers.conf
     fi
-    echo >> conf/local.conf
+done
 
-    # mirror host specific sstate-cache to common native directory
-    cat >> conf/local.conf <<-EOF
-        INHERIT += "own-mirrors"
-        SSTATE_MIRRORS = "file://.*/(.*)/(.*) file://native/\\1/\\2 \\n"
+# setup machine/distro
+sed -e "s,MACHINE ??=.*,MACHINE ??= '$MACHINE',g" \
+    -e "s,DISTRO ?=.*,DISTRO ?= '$DISTRO',g" \
+    -i conf/local.conf
+
+# setup dl_dir
+echo "# Source download dir" >> conf/local.conf
+if test $setup_dl_path; then
+    echo "DL_DIR = \"$setup_dl_path\"" >> conf/local.conf
+else
+    echo "DL_DIR = \"$PROJECT_DIR/../sources\"" >> conf/local.conf
+fi
+echo >> conf/local.conf
+
+# setup cache dir
+echo "# The sstate-cache dir" >> conf/local.conf
+if test $setup_sstate_path; then
+    echo "SSTATE_DIR = \"$setup_sstate_path\"" >> conf/local.conf
+else
+    echo "SSTATE_DIR = \"$PROJECT_DIR/../sstate-cache\"" >> conf/local.conf
+fi
+echo >> conf/local.conf
+
+# mirror host specific sstate-cache to common native directory
+cat >> conf/local.conf <<-EOF
+    INHERIT += "own-mirrors"
+    SSTATE_MIRRORS = "file://.*/(.*)/(.*) file://native/\\1/\\2 \\n"
 EOF
 
-    cat >> conf/local.conf <<-EOF
-        # Parallelism Options
-        BB_NUMBER_THREADS = "$THREADS"
-        PARALLEL_MAKE = "-j $JOBS"
-
+cat >> conf/local.conf <<-EOF
+    # Parallelism Options
+    BB_NUMBER_THREADS = "$THREADS"
+    PARALLEL_MAKE = "-j $JOBS"
 EOF
  
-    # setup fsl private mirrors
-    if [ ! -z "$setup_mirrors" ];then
-        echo "# Packages source and sstate-cache mirrors" >> conf/local.conf
-        cat >> conf/local.conf <<-EOF
-            SOURCE_MIRROR_URL = "http://nas101.am.freescale.net/yocto/downloads/"
-            SSTATE_MIRRORS += "file://(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/\\1/\\2 \\n"
-            SSTATE_MIRRORS += "file://.*/(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/native/\\1/\\2 \\n"
+# setup fsl private mirrors
+if [ ! -z "$setup_mirrors" ];then
+    echo "# Packages source and sstate-cache mirrors" >> conf/local.conf
+    cat >> conf/local.conf <<-EOF
+        SOURCE_MIRROR_URL = "http://nas101.am.freescale.net/yocto/downloads/"
+        SSTATE_MIRRORS += "file://(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/\\1/\\2 \\n"
+        SSTATE_MIRRORS += "file://.*/(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/native/\\1/\\2 \\n"
 EOF
-    fi
+fi
 
-    # option to enable lite mode for now
-    if test $setup_lite; then
-        echo "# delete sources after build" >> conf/local.conf
-        echo "INHERIT += \"rm_work\"" >> conf/local.conf
-        echo >> conf/local.conf
-    fi
+# option to enable lite mode for now
+if test $setup_lite; then
+    echo "# delete sources after build" >> conf/local.conf
+    echo "INHERIT += \"rm_work\"" >> conf/local.conf
+    echo >> conf/local.conf
+fi
 
-    if echo "$MACHINE" |egrep -q "(p5020|p5040|t104|t208|t4240|t4160|b4420|b4860)"; then
-        # disable prelink (for multilib scenario) for now
-        sed -i s/image-mklibs.image-prelink/image-mklibs/g conf/local.conf
-    fi
+if echo "$MACHINE" |egrep -q "(p5020|p5040|t104|t208|t4240|t4160|b4420|b4860)"; then
+    # disable prelink (for multilib scenario) for now
+    sed -i s/image-mklibs.image-prelink/image-mklibs/g conf/local.conf
+fi
 
-    if echo "$IMX_ARM_MACHINE" |egrep -q "(${MACHINE}$|${MACHINE} +)"; then
-        # Handle EULA setting
-        if [ -z "$EULA" ] && ! grep -q '^ACCEPT_FSL_EULA\s*=' conf/local.conf; then
-            EULA='ask'
-            cat <<-EOF
-
-                Some SoC depends on libraries and packages that are covered by
-                Freescale EULA. To have the right to use those binaries in your images
-                you need to read and accept the EULA that will be displayed.
-
+if echo "$IMX_ARM_MACHINE" |egrep -q "(${MACHINE}$|${MACHINE} +)"; then
+    # Handle EULA setting
+    if [ -z "$EULA" ] && ! grep -q '^ACCEPT_FSL_EULA\s*=' conf/local.conf; then
+        EULA='ask'
+        cat <<-EOF
+            Some SoC depends on libraries and packages that are covered by
+            Freescale EULA. To have the right to use those binaries in your images
+            you need to read and accept the EULA that will be displayed.
 EOF
         sleep 4
 
@@ -423,29 +420,29 @@ EOF
                 ;;
             esac
         done
-        fi
-        if grep -q '^ACCEPT_FSL_EULA\s*=' conf/local.conf; then
-            sed -i "s/^#*ACCEPT_FSL_EULA\s*=.*/ACCEPT_FSL_EULA = \"$EULA\"/g" conf/local.conf
-        else
-            echo "ACCEPT_FSL_EULA = \"$EULA\"" >> conf/local.conf
-        fi
     fi
-
-    echo "# add uboot image types to hob" >> conf/hob-pre.conf
-    echo "INHERIT += \"image_types_uboot\"" >> conf/hob-pre.conf
-    echo >> conf/hob-pre.conf
-
-    # make an empty hob-post.conf to avoid message about missing file
-    echo >> conf/hob-post.conf
-
-    # make a SOURCE_THIS file
-    if ! [ -e SOURCE_THIS ];then
-        echo "#!/bin/sh" >> SOURCE_THIS
-        echo "cd ${POKY_DIR}" >> SOURCE_THIS
-        echo "set -- $PROJECT_DIR" >> SOURCE_THIS
-        echo ". ./oe-init-build-env > /dev/null" >> SOURCE_THIS
-        echo "echo \"Back to build project $PROJECT_DIR.\"" >> SOURCE_THIS
+    if grep -q '^ACCEPT_FSL_EULA\s*=' conf/local.conf; then
+        sed -i "s/^#*ACCEPT_FSL_EULA\s*=.*/ACCEPT_FSL_EULA = \"$EULA\"/g" conf/local.conf
+    else
+        echo "ACCEPT_FSL_EULA = \"$EULA\"" >> conf/local.conf
     fi
+fi
+
+echo "# add uboot image types to hob" >> conf/hob-pre.conf
+echo "INHERIT += \"image_types_uboot\"" >> conf/hob-pre.conf
+echo >> conf/hob-pre.conf
+
+# make an empty hob-post.conf to avoid message about missing file
+echo >> conf/hob-post.conf
+
+# make a SOURCE_THIS file
+if ! [ -e SOURCE_THIS ];then
+    echo "#!/bin/sh" >> SOURCE_THIS
+    echo "cd ${POKY_DIR}" >> SOURCE_THIS
+    echo "set -- $PROJECT_DIR" >> SOURCE_THIS
+    echo ". ./oe-init-build-env > /dev/null" >> SOURCE_THIS
+    echo "echo \"Back to build project $PROJECT_DIR.\"" >> SOURCE_THIS
+fi
 
 prompt_message
 cd $PROJECT_DIR
