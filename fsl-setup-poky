@@ -47,51 +47,55 @@ if [ "$(whoami)" = "root" ]; then
 fi
 
 # check if sevaral essential host pkgs are available
-if [ -z "`which xz`" -o -z "`which chrpath`" -o -z "`which gcc`" -o -z "`which make`" ];then
+if [ -z "`which xz`" ] \
+    || [ -z "`which gcc`" ] \
+    || [ -z "`which make`" ] \
+    || [ -z "`which chrpath`" ];then
     echo "
-    ERROR: Please run script '${POKY_DIR}/scripts/host-prepare.sh' first.
+    ERROR: Please run ${POKY_DIR}/scripts/host-prepare.sh first.
     "
     unset POKY_DIR
     return 1
 fi
 
 # Check if meta-fsl-ppc layer exists
-if [ -e ${POKY_DIR}/meta-fsl-ppc ]; then
-    PPC_LAYER_PATH="${POKY_DIR}/meta-fsl-ppc"
-elif [ -e ${POKY_DIR}/../meta-fsl-ppc ]; then
+if [ -e ${POKY_DIR}/../meta-fsl-ppc ]; then
     PPC_LAYER_PATH="${POKY_DIR}/../meta-fsl-ppc"
+elif [ -e ${POKY_DIR}/meta-fsl-ppc ]; then
+    PPC_LAYER_PATH="${POKY_DIR}/meta-fsl-ppc"
 fi
 
 # Check if meta-fsl-arm layer exists
-if [ -e ${POKY_DIR}/meta-fsl-arm ]; then
-    ARM_LAYER_PATH="${POKY_DIR}/meta-fsl-arm"
-elif [ -e ${POKY_DIR}/../meta-fsl-arm ]; then
+if [ -e ${POKY_DIR}/../meta-fsl-arm ]; then
     ARM_LAYER_PATH="${POKY_DIR}/../meta-fsl-arm"
+elif [ -e ${POKY_DIR}/meta-fsl-arm ]; then
+    ARM_LAYER_PATH="${POKY_DIR}/meta-fsl-arm"
 fi
 
 if [ "x$PPC_LAYER_PATH" = x"" ] && [ "x$ARM_LAYER_PATH" = x"" ]; then
-    echo "WARNING: neither of meta-fsl-{ppc,arm} layer locates at ${POKY_DIR} or ${POKY_DIR}/../"
+    echo "WARNING: neither of meta-fsl-{ppc,arm} layer found."
+    echo "    They should be at ${POKY_DIR}/../ or ${POKY_DIR}/"
 fi
 
 # Check if meta-fsl-networking layer exists
-if [ -e ${POKY_DIR}/meta-fsl-networking ]; then
-    NETWORKING_LAYER_PATH="${POKY_DIR}/meta-fsl-networking"
-elif [ -e ${POKY_DIR}/../meta-fsl-networking ]; then
+if [ -e ${POKY_DIR}/../meta-fsl-networking ]; then
     NETWORKING_LAYER_PATH="${POKY_DIR}/../meta-fsl-networking"
+elif [ -e ${POKY_DIR}/meta-fsl-networking ]; then
+    NETWORKING_LAYER_PATH="${POKY_DIR}/meta-fsl-networking"
 fi
 
 # Check if meta-fsl-multimedia layer exists
-if [ -e ${POKY_DIR}/meta-fsl-multimedia ]; then
-    MULTIMEDIA_LAYER_PATH="${POKY_DIR}/meta-fsl-multimedia"
-elif [ -e ${POKY_DIR}/../meta-fsl-multimedia ]; then
+if [ -e ${POKY_DIR}/../meta-fsl-multimedia ]; then
     MULTIMEDIA_LAYER_PATH="${POKY_DIR}/../meta-fsl-multimedia"
+elif [ -e ${POKY_DIR}/meta-fsl-multimedia ]; then
+    MULTIMEDIA_LAYER_PATH="${POKY_DIR}/meta-fsl-multimedia"
 fi
 
 # Check if meta-fsl-local-sdk layer exists
-if [ -e ${POKY_DIR}/../meta-fsl-local-sdk ]; then
-    LOCALSDK_LAYER_PATH="${POKY_DIR}/../meta-fsl-local-sdk"
-elif [ -e ${POKY_DIR}/../../meta-fsl-local-sdk ]; then
+if [ -e ${POKY_DIR}/../../meta-fsl-local-sdk ]; then
     LOCALSDK_LAYER_PATH="${POKY_DIR}/../../meta-fsl-local-sdk"
+elif [ -e ${POKY_DIR}/../meta-fsl-local-sdk ]; then
+    LOCALSDK_LAYER_PATH="${POKY_DIR}/../meta-fsl-local-sdk"
 fi
 
 if [ -e "$PPC_LAYER_PATH" ]; then
@@ -101,10 +105,11 @@ if [ -e "$PPC_LAYER_PATH" ]; then
         QORIQ_PPC_MACHINE="`ls ${PPC_LAYER_PATH}/conf/machine | grep "\.conf" | sed s/\.conf//g | xargs echo`"
     fi
 fi
+
 if [ -e "$ARM_LAYER_PATH" ]; then
     if [ -e "${MULTIMEDIA_LAYER_PATH}" ]; then
         IMX_ARM_MACHINE="`ls ${ARM_LAYER_PATH}/conf/machine | grep -v "^include" | grep -v "^ls" | sed s/\.conf//g | xargs echo`"
-    elif [ -e "${NETWORKING_LAYER_PATH}" ]; then
+    if [ -e "${NETWORKING_LAYER_PATH}" ]; then
         LS_ARM_MACHINE="`ls ${ARM_LAYER_PATH}/conf/machine | grep "^ls" | sed s/\.conf//g | xargs echo`"
     fi
 fi
@@ -130,7 +135,7 @@ usage()
     * [-s string]:  append an extra string to project folder
     * [-l]:       lite mode. To help conserve disk space, deletes the building 
                   directory once the package is built.
-    * [-p]:       append fsl cache and source mirrors (For FSL Internal Use Only)
+    * [-p]:       use fsl internal cache mirrors (FSL Internal Use Only)
     * [-h]:       help
     "
 
@@ -173,10 +178,12 @@ prompt_message ()
 clean_up()
 {
     unset POKY_DIR PPC_LAYER_PATH ARM_LAYER_PATH NETWORKING_LAYER_PATH \
-        MULTIMEDIA_LAYER_PATH IMX_ARM_MACHINE QORIQ_PPC_MACHINE LS_ARM_MACHINE PROJECT_DIR MACHINE \
+        MULTIMEDIA_LAYER_PATH IMX_ARM_MACHINE QORIQ_PPC_MACHINE \
+        LS_ARM_MACHINE PROJECT_DIR MACHINE \
         setup_flag setup_j setup_t setup_lite setup_mirrors setup_help \
         setup_string setup_build_path setup_dl_path setup_sstate_path \
-        setup_error SKIP_CONFIG user_input APPEND_LAYER_LIST layer append_layer \
+        setup_error SKIP_CONFIG user_input APPEND_LAYER_LIST \
+        layer append_layer DOWNLOADS CACHES \
         OLD_OPTIND DISTRO CPUS JOBS THREADS ARCH EULA LOCALSDK_LAYER_PATH
     unset -f prompt_message usage clean_up
 }
@@ -223,7 +230,7 @@ if test $setup_error || test $setup_help; then
 fi
 
 # Check machine name
-if [ -n "$MACHINE" ] && echo "$QORIQ_PPC_MACHINE" |egrep -q "(${MACHINE}$|${MACHINE} +)"; then
+if [ -e ${PPC_LAYER_PATH}/conf/machine/${MACHINE}.conf ];then
     DISTRO="fsl-networking"
     APPEND_LAYER_LIST=" \
         meta-fsl-ppc \
@@ -245,19 +252,28 @@ if [ -n "$MACHINE" ] && echo "$QORIQ_PPC_MACHINE" |egrep -q "(${MACHINE}$|${MACH
         meta-cloud-services/meta-openstack-controller-deploy \
         meta-cloud-services/meta-openstack-qemu \
     "
-elif [ -n "$MACHINE" ] && echo "$IMX_ARM_MACHINE" |egrep -q "(${MACHINE}$|${MACHINE} +)"; then
-    DISTRO="poky"
-    APPEND_LAYER_LIST="meta-fsl-arm meta-fsl-local-sdk meta-oe/meta-oe meta-fsl-multimedia"
-elif [ -n "$MACHINE" ] && echo "$LS_ARM_MACHINE" |egrep -q "(${MACHINE}$|${MACHINE} +)"; then
-    DISTRO="fsl-networking"
-    if echo "$MACHINE" |egrep -q "(ls2)"; then
-        APPEND_LAYER_LIST="meta-fsl-arm meta-fsl-networking meta-fsl-toolchain meta-virtualization \
-            meta-fsl-local-sdk meta-oe/meta-oe meta-oe/meta-networking meta-oe/toolchain-layer \
-            meta-linaro/meta-linaro-toolchain meta-linaro/meta-linaro meta-linaro/meta-aarch64"
+elif [ -e ${ARM_LAYER_PATH}/conf/machine/${MACHINE}.conf ];then
+    if echo "$MACHINE" |egrep -q "^ls"; then
+        DISTRO="fsl-networking"
+        APPEND_LAYER_LIST=" \
+            meta-fsl-arm \
+            meta-fsl-networking \
+            meta-fsl-toolchain \
+            meta-virtualization \
+            meta-fsl-local-sdk \
+            meta-oe/meta-oe \
+            meta-oe/meta-networking \
+            meta-oe/toolchain-layer \
+            meta-linaro/meta-linaro-toolchain \
+        "
     else
-        APPEND_LAYER_LIST="meta-fsl-arm meta-fsl-networking meta-fsl-toolchain meta-virtualization \
-            meta-fsl-local-sdk meta-oe/meta-oe meta-oe/meta-networking meta-oe/toolchain-layer \
-            meta-linaro/meta-linaro-toolchain"
+        DISTRO="poky"
+        APPEND_LAYER_LIST=" \
+            meta-fsl-arm \
+            meta-fsl-local-sdk \
+            meta-oe/meta-oe \
+            meta-fsl-multimedia \
+        "
     fi
 else
     echo "ERROR: Specified an invalid machine type!"
@@ -272,10 +288,10 @@ JOBS="4"
 THREADS="4"
 
 # check optional jobs and threads
-if [ -n "$setup_j" ] && echo "$setup_j" | egrep -q "^[0-9]+$"; then
+if echo "$setup_j" | egrep -q "^[0-9]+$"; then
     JOBS=$setup_j
 fi
-if [ -n "$setup_t" ] && echo "$setup_t" | egrep -q "^[0-9]+$"; then
+if echo "$setup_t" | egrep -q "^[0-9]+$"; then
     THREADS=$setup_t
 fi
 
@@ -286,22 +302,30 @@ else
     PROJECT_DIR=`pwd`/build_${MACHINE}_release
 fi
 if test $setup_string; then
-    PROJECT_DIR=${PROJECT_DIR}_${setup_string}
+    PROJECT_DIR="${PROJECT_DIR}_${setup_string}"
 fi
 PROJECT_DIR=`readlink -f "$PROJECT_DIR"`
 
+if test $setup_dl_path; then
+    DOWNLOADS="$setup_dl_path"
+else
+    DOWNLOADS="$PROJECT_DIR/../sources"
+fi
+DOWNLOADS=`readlink -f "$DOWNLOADS"`
+
+if test $setup_sstate_path; then
+    CACHES="$setup_sstate_path"
+else
+    CACHES="$PROJECT_DIR/../sstate-cache"
+fi
+CACHES=`readlink -f "$CACHES"`
+
 # check if project folder was created before
-if [ -e "$PROJECT_DIR/conf/local.conf" ]; then
-    echo "$PROJECT_DIR was created before. Override its configuration files? Y|n"
-    read user_input
-    if [ -z "$user_input" ] || echo $user_input |grep -q "^[Yy]";then
-        SKIP_CONFIG="0"
-        mv -f $PROJECT_DIR/conf/local.conf $PROJECT_DIR/conf/local.conf.bak ||true
-        mv -f $PROJECT_DIR/conf/bblayers.conf $PROJECT_DIR/conf/bblayers.conf.bak ||true
-        mv -f $PROJECT_DIR/conf/hob-pre.conf $PROJECT_DIR/conf/hob-pre.conf.bak ||true
-    else
-        SKIP_CONFIG="1"
-    fi
+if [ -e "$PROJECT_DIR/SOURCE_THIS" ]; then
+    echo "$PROJECT_DIR was created before."
+    . $PROJECT_DIR/SOURCE_THIS
+    echo "Modify files under $PROJECT_DIR/conf/ to update."
+    clean_up && return 0
 fi
 
 # source oe-init-build-env to init build env
@@ -314,68 +338,41 @@ if [ "`pwd -P`" != "$BUILDDIR" ];then
     clean_up && return 1
 fi
 
-if [ "x${SKIP_CONFIG}" = "x1" ]; then
-    echo "Your configuration files at $PROJECT_DIR/conf/ has not been touched."
-    prompt_message && clean_up
-    return
-fi
 # add layers
 for layer in $(eval echo $APPEND_LAYER_LIST); do
     append_layer=""
-    if [ -e ${POKY_DIR}/${layer} ]; then
-        append_layer="${POKY_DIR}/${layer}"
-    elif [ -e ${POKY_DIR}/../${layer} ]; then
+    if [ -e ${POKY_DIR}/../${layer} ]; then
         append_layer="${POKY_DIR}/../${layer}"
-    elif [ "x${layer}" = "xmeta-fsl-local-sdk" ] && [ -e ${POKY_DIR}/../../${layer} ]; then
+    elif [ -e ${POKY_DIR}/${layer} ]; then
+        append_layer="${POKY_DIR}/${layer}"
+    elif [ -e ${POKY_DIR}/../../${layer} ] \
+        && [ "x${layer}" = "xmeta-fsl-local-sdk" ]; then
         append_layer="${POKY_DIR}/../../${layer}"
     fi
     if [ -n "${append_layer}" ]; then
         append_layer=`readlink -f $append_layer`
-        awk '/  \"/ && !x {print "'"  ${append_layer}"' \\"; x=1} 1' conf/bblayers.conf > conf/bblayers.conf~
+        awk '/  \"/ && !x {print "'"  ${append_layer}"' \\"; x=1} 1' \
+            conf/bblayers.conf > conf/bblayers.conf~
         mv conf/bblayers.conf~ conf/bblayers.conf
     fi
 done
 
-# setup machine/distro
-sed -e "s,MACHINE ??=.*,MACHINE ??= '$MACHINE',g" \
-    -e "s,DISTRO ?=.*,DISTRO ?= '$DISTRO',g" \
-    -i conf/local.conf
-
-# setup dl_dir
-echo "# Source download dir" >> conf/local.conf
-if test $setup_dl_path; then
-    echo "DL_DIR = \"$setup_dl_path\"" >> conf/local.conf
-else
-    echo "DL_DIR = \"$PROJECT_DIR/../sources\"" >> conf/local.conf
-fi
-echo >> conf/local.conf
-
-# setup cache dir
-echo "# The sstate-cache dir" >> conf/local.conf
-if test $setup_sstate_path; then
-    echo "SSTATE_DIR = \"$setup_sstate_path\"" >> conf/local.conf
-else
-    echo "SSTATE_DIR = \"$PROJECT_DIR/../sstate-cache\"" >> conf/local.conf
-fi
-echo >> conf/local.conf
-
-# mirror host specific sstate-cache to common native directory
 cat >> conf/local.conf <<-EOF
-    INHERIT += "own-mirrors"
-    SSTATE_MIRRORS = "file://.*/(.*)/(.*) file://native/\\1/\\2 \\n"
-EOF
-
-cat >> conf/local.conf <<-EOF
+    MACHINE ?= "$MACHINE"
+    DISTRO = "$DISTRO"
     # Parallelism Options
     BB_NUMBER_THREADS = "$THREADS"
     PARALLEL_MAKE = "-j $JOBS"
+    DL_DIR = "$DOWNLOADS"
+    SSTATE_DIR = "$CACHES"
+    # mirror host sstate-cache to native directory
+    SSTATE_MIRRORS = "file://.*/(.*)/(.*) file://native/\\1/\\2 \\n"
 EOF
- 
+
 # setup fsl private mirrors
 if [ ! -z "$setup_mirrors" ];then
-    echo "# Packages source and sstate-cache mirrors" >> conf/local.conf
     cat >> conf/local.conf <<-EOF
-        SOURCE_MIRROR_URL = "http://nas101.am.freescale.net/yocto/downloads/"
+        # sstate-cache mirrors
         SSTATE_MIRRORS += "file://(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/\\1/\\2 \\n"
         SSTATE_MIRRORS += "file://.*/(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/native/\\1/\\2 \\n"
 EOF
@@ -388,7 +385,7 @@ if test $setup_lite; then
     echo >> conf/local.conf
 fi
 
-if echo "$MACHINE" |egrep -q "(p5020|p5040|t104|t208|t4240|t4160|b4420|b4860)"; then
+if echo "$MACHINE" |egrep -q "^(b4|p5|t1|t2|t4)"; then
     # disable prelink (for multilib scenario) for now
     sed -i s/image-mklibs.image-prelink/image-mklibs/g conf/local.conf
 fi
