@@ -43,7 +43,7 @@ fi
 if [ "$(whoami)" = "root" ]; then
     echo "ERROR: do not use the BSP as root. Exiting..."
     unset POKY_DIR
-	return 1
+    return 1
 fi
 
 # check if sevaral essential host pkgs are available
@@ -176,7 +176,7 @@ clean_up()
         MULTIMEDIA_LAYER_PATH IMX_ARM_MACHINE QORIQ_PPC_MACHINE LS_ARM_MACHINE PROJECT_DIR MACHINE \
         setup_flag setup_j setup_t setup_lite setup_mirrors setup_help \
         setup_string setup_build_path setup_dl_path setup_sstate_path \
-		setup_error SKIP_CONFIG user_input APPEND_LAYER_LIST layer append_layer \
+        setup_error SKIP_CONFIG user_input APPEND_LAYER_LIST layer append_layer \
         OLD_OPTIND DISTRO CPUS JOBS THREADS ARCH EULA LOCALSDK_LAYER_PATH
     unset -f prompt_message usage clean_up
 }
@@ -226,23 +226,24 @@ fi
 if [ -n "$MACHINE" ] && echo "$QORIQ_PPC_MACHINE" |egrep -q "(${MACHINE}$|${MACHINE} +)"; then
     DISTRO="fsl-networking"
     APPEND_LAYER_LIST=" \
-		meta-fsl-ppc \
-		meta-fsl-toolchain \
-		meta-fsl-networking \
-		meta-fsl-security \
-		meta-fsl-testing \
-		meta-virtualization \
-		meta-fsl-local-sdk \
-		meta-oe/meta-oe \
-		meta-oe/meta-networking \
-		meta-oe/meta-webserver \
-		meta-oe/meta-ruby \
-		meta-oe/meta-filesystems \
-		meta-java \
-		meta-cloud-services/meta-openstack \
-		meta-cloud-services/meta-openstack-compute-deploy \
-		meta-cloud-services/meta-openstack-controller-deploy \
-		meta-cloud-services/meta-openstack-qemu \
+        meta-fsl-ppc \
+	meta-fsl-toolchain \
+        meta-fsl-networking \
+        meta-fsl-security \
+        meta-fsl-testing \
+        meta-virtualization \
+        meta-fsl-local-sdk \
+        meta-oe/meta-oe \
+        meta-oe/meta-networking \
+        meta-oe/meta-webserver \
+        meta-oe/meta-ruby \
+        meta-oe/meta-python \
+        meta-oe/meta-filesystems \
+        meta-java \
+        meta-cloud-services/meta-openstack \
+        meta-cloud-services/meta-openstack-compute-deploy \
+        meta-cloud-services/meta-openstack-controller-deploy \
+        meta-cloud-services/meta-openstack-qemu \
     "
 elif [ -n "$MACHINE" ] && echo "$IMX_ARM_MACHINE" |egrep -q "(${MACHINE}$|${MACHINE} +)"; then
     DISTRO="poky"
@@ -310,7 +311,7 @@ set -- $PROJECT_DIR
 
 # check result of sourcing oe-init-build-env
 if [ "`pwd -P`" != "$BUILDDIR" ];then
-	clean_up && return 1
+    clean_up && return 1
 fi
 
 if [ "x${SKIP_CONFIG}" = "x1" ]; then
@@ -318,8 +319,8 @@ if [ "x${SKIP_CONFIG}" = "x1" ]; then
     prompt_message && clean_up
     return
 else
-	# add layers
-	for layer in $(eval echo $APPEND_LAYER_LIST); do
+    # add layers
+    for layer in $(eval echo $APPEND_LAYER_LIST); do
         append_layer=""
         if [ -e ${POKY_DIR}/${layer} ]; then
             append_layer="${POKY_DIR}/${layer}"
@@ -360,14 +361,14 @@ else
 
     # mirror host specific sstate-cache to common native directory
     cat >> conf/local.conf <<-EOF
-	INHERIT += "own-mirrors"
-	SSTATE_MIRRORS = "file://.*/(.*)/(.*) file://native/\\1/\\2 \\n"
+        INHERIT += "own-mirrors"
+        SSTATE_MIRRORS = "file://.*/(.*)/(.*) file://native/\\1/\\2 \\n"
 EOF
 
     cat >> conf/local.conf <<-EOF
-	# Parallelism Options
-	BB_NUMBER_THREADS = "$THREADS"
-	PARALLEL_MAKE = "-j $JOBS"
+        # Parallelism Options
+        BB_NUMBER_THREADS = "$THREADS"
+        PARALLEL_MAKE = "-j $JOBS"
 
 EOF
  
@@ -375,9 +376,9 @@ EOF
     if [ ! -z "$setup_mirrors" ];then
         echo "# Packages source and sstate-cache mirrors" >> conf/local.conf
         cat >> conf/local.conf <<-EOF
-		SOURCE_MIRROR_URL = "http://nas101.am.freescale.net/yocto/downloads/"
-		SSTATE_MIRRORS += "file://(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/\\1/\\2 \\n"
-		SSTATE_MIRRORS += "file://.*/(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/native/\\1/\\2 \\n"
+            SOURCE_MIRROR_URL = "http://nas101.am.freescale.net/yocto/downloads/"
+            SSTATE_MIRRORS += "file://(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/\\1/\\2 \\n"
+            SSTATE_MIRRORS += "file://.*/(.*)/(.*) http://nas101.am.freescale.net/yocto/sstate-cache/native/\\1/\\2 \\n"
 EOF
     fi
 
@@ -399,9 +400,9 @@ EOF
             EULA='ask'
             cat <<-EOF
 
-			Some SoC depends on libraries and packages that are covered by
-			Freescale EULA. To have the right to use those binaries in your images
-			you need to read and accept the EULA that will be displayed.
+                Some SoC depends on libraries and packages that are covered by
+                Freescale EULA. To have the right to use those binaries in your images
+                you need to read and accept the EULA that will be displayed.
 
 EOF
         sleep 4
