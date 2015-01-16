@@ -388,14 +388,8 @@ EOF
         echo >> conf/local.conf
     fi
 
-    # set meta-oe layer with lowest priority
-    if [ -e ${POKY_DIR}/meta-oe/meta-oe ] || [ -e ${POKY_DIR}/../meta-oe/meta-oe ]; then
-        echo "BBFILE_PRIORITY_openembedded-layer = \"1\"" >> conf/local.conf
-        echo >> conf/local.conf
-    fi
-
-    if echo "$MACHINE" |egrep -q "^(b4|p5|t1|t2|t4)"; then
-        # disable prelink for e5500/e6500
+    if echo "$MACHINE" |egrep -q "(p5020|p5040|t104|t208|t4240|t4160|b4420|b4860)"; then
+        # disable prelink (for multilib scenario) for now
         sed -i s/image-mklibs.image-prelink/image-mklibs/g conf/local.conf
     fi
 
