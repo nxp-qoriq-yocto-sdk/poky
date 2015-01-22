@@ -263,6 +263,7 @@ elif [ -e ${ARM_LAYER}/conf/machine/${MACHINE}.conf ];then
             meta-oe/meta-oe \
             meta-oe/meta-networking \
             meta-oe/toolchain-layer \
+            meta-java \
             meta-linaro/meta-linaro-toolchain \
         "
     else
