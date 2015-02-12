@@ -250,6 +250,9 @@ if [ -e ${PPC_LAYER}/conf/machine/${MACHINE}.conf ];then
         meta-cloud-services/meta-openstack-compute-deploy \
         meta-cloud-services/meta-openstack-controller-deploy \
         meta-cloud-services/meta-openstack-qemu \
+        meta-cloud-services/meta-openstack-compute-test-config \
+        meta-cloud-services/meta-openstack-controller-test-config \
+        meta-cloud-services \
     "
 elif [ -e ${ARM_LAYER}/conf/machine/${MACHINE}.conf ];then
     if echo "$MACHINE" |egrep -q "^ls"; then
