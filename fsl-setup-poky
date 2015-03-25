@@ -243,6 +243,7 @@ if [ -e ${PPC_LAYER}/conf/machine/${MACHINE}.conf ];then
         meta-oe/meta-networking \
         meta-oe/meta-webserver \
         meta-oe/meta-ruby \
+        meta-oe/meta-perl \
         meta-oe/meta-python \
         meta-oe/meta-filesystems \
         meta-java \
@@ -253,6 +254,7 @@ if [ -e ${PPC_LAYER}/conf/machine/${MACHINE}.conf ];then
         meta-cloud-services/meta-openstack-compute-test-config \
         meta-cloud-services/meta-openstack-controller-test-config \
         meta-cloud-services \
+        meta-security \
     "
 elif [ -e ${ARM_LAYER}/conf/machine/${MACHINE}.conf ];then
     if echo "$MACHINE" |egrep -q "^ls"; then
