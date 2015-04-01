@@ -7,7 +7,7 @@ if test $force_update; then UPDATE_FLAG='-y';fi
 # http://www.yoctoproject.org/docs/current/yocto-project-qs/yocto-project-qs.html#packages
 PKGS="python gcc gcc-c++ libtool \
      subversion git chrpath automake make wget \
-     diffstat texinfo freeglut-devel libSDL-devel"
+     diffstat makeinfo freeglut-devel libSDL-devel"
 # pkgs required for fsl use
 PKGS="patch xz $PKGS"
 
