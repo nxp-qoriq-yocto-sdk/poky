@@ -262,6 +262,7 @@ elif [ -e ${ARM_LAYER}/conf/machine/${MACHINE}.conf ];then
         APPEND_LAYER_LIST=" \
             meta-fsl-arm \
             meta-fsl-networking \
+            meta-fsl-testing \
             meta-fsl-toolchain \
             meta-virtualization \
             meta-fsl-local-sdk \
