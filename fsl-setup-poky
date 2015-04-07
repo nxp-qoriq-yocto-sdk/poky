@@ -229,7 +229,8 @@ if test $setup_error || test $setup_h; then
 fi
 
 # Check machine name
-if [ -e ${PPC_LAYER}/conf/machine/${MACHINE}.conf ];then
+if [ -e ${PPC_LAYER}/conf/machine/${MACHINE}.conf ] || 
+    [ -e ${LOCALSDK_LAYER}/conf/machine/${MACHINE}.conf ];then
     DISTRO="fsl-networking"
     APPEND_LAYER_LIST=" \
         meta-fsl-ppc \
@@ -256,7 +257,8 @@ if [ -e ${PPC_LAYER}/conf/machine/${MACHINE}.conf ];then
         meta-cloud-services \
         meta-security \
     "
-elif [ -e ${ARM_LAYER}/conf/machine/${MACHINE}.conf ];then
+elif [ -e ${ARM_LAYER}/conf/machine/${MACHINE}.conf ] ||
+    [ -e ${LOCALSDK_LAYER}/conf/machine/${MACHINE}.conf ];then
     if echo "$MACHINE" |egrep -q "^ls"; then
         DISTRO="fsl-networking"
         APPEND_LAYER_LIST=" \
