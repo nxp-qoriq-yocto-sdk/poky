@@ -99,11 +99,10 @@ elif [ -e ${POKY_DIR}/../meta-fsl-local-sdk ]; then
 fi
 
 if [ -e "$PPC_LAYER" ]; then
-    if [ -e "$LOCALSDK_LAYER" ]; then
-        PPC_MACHINE="`ls ${PPC_LAYER}/conf/machine ${LOCALSDK_LAYER}/conf/machine | grep "\.conf" | sed s/\.conf//g | xargs echo`"
-    else
-        PPC_MACHINE="`ls ${PPC_LAYER}/conf/machine | grep "\.conf" | sed s/\.conf//g | xargs echo`"
-    fi
+    PPC_MACHINE="`ls ${PPC_LAYER}/conf/machine |grep -v "^ls" |grep "\.conf" | sed s/\.conf//g | xargs echo`"
+fi
+if [ -e "$LOCALSDK_LAYER" ]; then
+    PPC_MACHINE="$PPC_MACHINE `ls ${LOCALSDK_LAYER}/conf/machine | grep -v "^ls" | grep "\.conf" | sed s/\.conf//g | xargs echo`"
 fi
 
 if [ -e "$ARM_LAYER" ]; then
@@ -112,6 +111,9 @@ if [ -e "$ARM_LAYER" ]; then
     fi
     if [ -e "${NETWORKING_LAYER}" ]; then
         LS_MACHINE="`ls ${ARM_LAYER}/conf/machine | grep "^ls" | sed s/\.conf//g | xargs echo`"
+        if [ -e "$LOCALSDK_LAYER" ]; then
+            LS_MACHINE="$LS_MACHINE `ls $LOCALSDK_LAYER/conf/machine | grep "^ls" | sed s/\.conf//g | xargs echo`"
+        fi
     fi
 fi
 
@@ -229,8 +231,9 @@ if test $setup_error || test $setup_h; then
 fi
 
 # Check machine name
-if [ -e ${PPC_LAYER}/conf/machine/${MACHINE}.conf ] || 
-    [ -e ${LOCALSDK_LAYER}/conf/machine/${MACHINE}.conf ];then
+if echo $MACHINE | grep -v "^ls" && \
+    ([ -e ${PPC_LAYER}/conf/machine/${MACHINE}.conf ] || 
+    [ -e ${LOCALSDK_LAYER}/conf/machine/${MACHINE}.conf ]);then
     DISTRO="fsl-networking"
     APPEND_LAYER_LIST=" \
         meta-fsl-ppc \
