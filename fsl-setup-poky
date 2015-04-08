@@ -273,9 +273,11 @@ elif [ -e ${ARM_LAYER}/conf/machine/${MACHINE}.conf ] ||
             meta-fsl-local-sdk \
             meta-oe/meta-oe \
             meta-oe/meta-networking \
+            meta-oe/meta-perl \
             meta-oe/toolchain-layer \
             meta-java \
             meta-linaro/meta-linaro-toolchain \
+            meta-security \
         "
     else
         DISTRO="poky"
