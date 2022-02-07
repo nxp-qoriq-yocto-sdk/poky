@@ -94,8 +94,6 @@ def extra_path_elements(d):
 PATH:prepend = "${@extra_path_elements(d)}"
 
 def get_lic_checksum_file_list(d):
-    import urllib
-
     filelist = []
     lic_files = d.getVar("LIC_FILES_CHKSUM") or ''
     tmpdir = d.getVar("TMPDIR")
@@ -115,7 +113,7 @@ def get_lic_checksum_file_list(d):
             if path[0] == '/':
                 if path.startswith((tmpdir, s, b, workdir)):
                     continue
-                filelist.append(urllib.parse.quote(path) + ":" + str(os.path.exists(path)))
+                filelist.append(path + ":" + str(os.path.exists(path)))
         except bb.fetch.MalformedUrl:
             bb.fatal(d.getVar('PN') + ": LIC_FILES_CHKSUM contains an invalid URL: " + url)
     return " ".join(filelist)
