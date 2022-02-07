@@ -8,7 +8,6 @@
 import glob
 import operator
 import os
-import urllib
 import stat
 import bb.utils
 import logging
@@ -111,14 +110,10 @@ class FileChecksumCache(MultiProcessCache):
 
         checksums = []
         for pth in filelist.split():
-            spl = pth.split(':')
-            if len(spl) != 2:
-                bb.fatal("found unformatted path in filelist " + pth)
-
-            exist = spl[1]
+            exist = pth.split(":")[1]
             if exist == "False":
                 continue
-            pth = urllib.parse.unquote(spl[0])
+            pth = pth.split(":")[0]
             if '*' in pth:
                 # Handle globs
                 for f in glob.glob(pth):
