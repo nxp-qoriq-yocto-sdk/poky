@@ -1,0 +1,18 @@
+Upstream-Status: Backport [https://gcc.gnu.org/git/?p=gcc.git;a=commit;h=90e46074e6b3561ae7d8ebd205127f286cc0c6b6]
+---
+--- a/libsanitizer/sanitizer_common/sanitizer_posix_libcdep.cpp	2022-03-15 07:59:54.515325204 -0700
++++ b/libsanitizer/sanitizer_common/sanitizer_posix_libcdep.cpp	2022-03-15 08:01:45.919405931 -0700
+@@ -166,9 +166,10 @@
+ #if !SANITIZER_GO
+ // TODO(glider): different tools may require different altstack size.
+ static uptr GetAltStackSize() {
+-  // SIGSTKSZ is not enough.
+-  static const uptr kAltStackSize = SIGSTKSZ * 4;
+-  return kAltStackSize;
++  // Note: since GLIBC_2.31, SIGSTKSZ may be a function call, so this may be
++  // more costly that you think. However GetAltStackSize is only call 2-3 times
++  // per thread so don't cache the evaluation.
++  return SIGSTKSZ * 4;
+ }
+ 
+ void SetAlternateSignalStack() {
