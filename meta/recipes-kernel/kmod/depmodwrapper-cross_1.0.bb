@@ -16,6 +16,9 @@ do_populate_sysroot[depends] = ""
 
 do_install() {
 	install -d ${D}${bindir_crossscripts}/
+	install -d ${D}${sysconfdir}/depmod.d/
+
+	echo "exclude .debug" > ${D}${sysconfdir}/depmod.d/exclude.conf
 
 	cat > ${D}${bindir_crossscripts}/depmodwrapper << EOF
 #!/bin/sh
